@@ -26,7 +26,8 @@ public class MainSourceFileWriter extends CodeFileWriter {
 	
 	@Override
 	protected void doWrite(CppWriter codeWriter) throws Exception {
-		codeWriter.include(this.getConfig().metaHeaderPath + this.getConfig().mainSourceFile + ".h");
+		//scturner
+		codeWriter.include(this.getConfig().metaHeaderPath + this.getConfig().mainSourceFile + this.getConfig().headerExtension);
 		codeWriter.include("cpgf/gmetadefine.h");
 		codeWriter.include("cpgf/goutmain.h");
 
@@ -44,6 +45,23 @@ public class MainSourceFileWriter extends CodeFileWriter {
 
 		codeWriter.beginBlock();
 
+		//scturner
+		codeWriter.writeLine("registerMetaDataToGlobal();");
+		//		CppClass global = new CppClass(null);
+		//		WriterUtil.defineMetaClass(this.getConfig(), codeWriter, global, "_d", "define");
+		//
+		//		codeWriter.writeLine(this.getMainFunctionName() + "(_d);");
+
+		codeWriter.endBlock();
+		codeWriter.writeLine("");
+
+		codeWriter.endNamespace("");
+
+		//scturner
+		//create a function to easily register the metadata
+		codeWriter.writeLine("void registerMetaDataToGlobal()");
+		codeWriter.beginBlock();
+
 		CppClass global = new CppClass(null);
 		WriterUtil.defineMetaClass(this.getConfig(), codeWriter, global, "_d", "define");
 
@@ -51,9 +69,9 @@ public class MainSourceFileWriter extends CodeFileWriter {
 
 		codeWriter.endBlock();
 		codeWriter.writeLine("");
+		//end scturner
 
-		codeWriter.endNamespace("");
-		
+
 		codeWriter.endNamespace(this.getConfig().cppNamespace);
 	}
 

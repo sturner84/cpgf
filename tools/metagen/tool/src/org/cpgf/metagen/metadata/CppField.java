@@ -3,6 +3,8 @@ package org.cpgf.metagen.metadata;
 public class CppField extends Item {
 	private CppType type;
 	private int bitField;
+	//added by saturner
+	private String initializer;
 
 	public CppField(String name, CppType type) {
 		super(EnumCategory.Field, name);
@@ -25,5 +27,14 @@ public class CppField extends Item {
 	public void setBitField(int bitFields) {
 		this.bitField = bitFields;
 	}
-	
+
+	//scturner
+	public String getInitializer() {
+		return initializer;
+	}
+
+	public void setInitializer(String init) {
+		initializer = init;
+	}
+
 }

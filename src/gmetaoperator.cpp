@@ -13,6 +13,11 @@ namespace cpgf {
 
 namespace meta_internal {
 
+#ifdef G_ADD_TYPE_INFO
+//scturner method types fix
+std::map<GMetaType (*)(), std::string> GMetaOperatorDataBase::returnTypes;
+std::map<GMetaType (*)(size_t), std::vector<std::string> > GMetaOperatorDataBase::typeNames;
+#endif
 
 void GMetaOperatorDataBase::deleteSelf()
 {

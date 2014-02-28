@@ -77,7 +77,8 @@ public class ClassSourceFileWriter extends CodeFileWriter {
 		codeWriter.include(WriterUtil.formatSourceIncludeHeader(this.getConfig(), this.sourceFileName));
 		codeWriter.writeLine("");
 		
-		codeWriter.include(this.getConfig().metaHeaderPath + this.targetFileName + ".h");
+		//scturner		
+		codeWriter.include(this.getConfig().metaHeaderPath + this.targetFileName + this.getConfig().headerExtension);
 		codeWriter.writeLine("");
 		
 		codeWriter.useNamespace("cpgf");

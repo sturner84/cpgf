@@ -5,13 +5,14 @@ import java.util.List;
 import org.cpgf.metagen.Config;
 import org.cpgf.metagen.Util;
 import org.cpgf.metagen.codewriter.CppWriter;
+//import org.cpgf.metagen.metadata.*; //scturner
 
 public class MainHeaderFileWriter extends CodeFileWriter {
 	private List<String> creationFunctionNames;
 
 	public MainHeaderFileWriter(Config config, List<String> creationFunctionNames) {
 		super(config, null, null);
-		
+
 		this.creationFunctionNames = creationFunctionNames;
 	}
 
@@ -19,7 +20,7 @@ public class MainHeaderFileWriter extends CodeFileWriter {
 	public boolean shouldSkip() {
 		return ! this.getConfig().autoRegisterToGlobal;
 	}
-	
+
 	@Override
 	protected String getOutputDirectory() {
 		return this.getConfig().headerOutput;
@@ -29,7 +30,7 @@ public class MainHeaderFileWriter extends CodeFileWriter {
 	protected String getOutputFileName() {
 		return this.getConfig().mainSourceFile + this.getConfig().headerExtension;
 	}
-	
+
 	@Override
 	protected void doWrite(CppWriter codeWriter) throws Exception {
 		codeWriter.beginIncludeGuard(Util.normalizeSymbol(this.getOutputFileName()));
@@ -38,18 +39,18 @@ public class MainHeaderFileWriter extends CodeFileWriter {
 
 		codeWriter.writeLine("");
 		codeWriter.writeLine("");
-		
+
 		codeWriter.useNamespace("cpgf");
 		codeWriter.writeLine("");
 
 		codeWriter.beginNamespace(this.getConfig().cppNamespace);
-		
+
 		List<String> sortedCreateFunctionNames = Util.sortStringList(creationFunctionNames);
 
 		for(String funcName : sortedCreateFunctionNames) {
 			codeWriter.writeLine("GDefineMetaInfo " + funcName + "();");
 		}
-		
+
 		codeWriter.writeLine("");
 		codeWriter.writeLine("");
 
@@ -63,9 +64,16 @@ public class MainHeaderFileWriter extends CodeFileWriter {
 		}
 
 		codeWriter.endBlock();
-		
+
 		codeWriter.writeLine("");
-		
+
+
+		//scturner
+		//create a function to easily register the metadata
+		codeWriter.writeLine("void registerMetaDataToGlobal();");		
+		codeWriter.writeLine("");
+		//end scturner
+
 		codeWriter.endNamespace(this.getConfig().cppNamespace);
 
 		codeWriter.endIncludeGuard();	

@@ -12,6 +12,8 @@
 #include <string>
 #include <stdio.h>
 
+//scturner
+#include <map>
 
 namespace cpgf {
 

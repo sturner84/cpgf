@@ -32,6 +32,11 @@ namespace cpgf {
 
 namespace meta_internal {
 
+#ifdef G_ADD_TYPE_INFO
+//scturner method type fix
+std::map<GMetaType (*)(), std::string> GMetaMethodDataBase::returnTypes;
+std::map<GMetaType (*)(size_t), std::vector<std::string> > GMetaMethodDataBase::typeNames;
+#endif
 
 void GMetaMethodDataBase::deleteSelf()
 {

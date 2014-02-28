@@ -213,6 +213,59 @@ public:
 	enum { Result = (sizeof(arrayData) / sizeof(arrayData[0])) };
 };
 
+//scturner
+#ifdef G_CONVERT_ARRAYS_TO_POINTERS
+template <typename T>
+struct ArrayToPointer
+{
+	typedef T Result;
+};
+//TODO do all of them or just the first?
+template <typename T> struct ArrayToPointer <T []>
+{
+	//typedef typename ArrayToPointer<T>::Result * Result;
+	typedef T * Result;
+};
+template <typename T> struct ArrayToPointer <T const []>
+{
+	//typedef typename ArrayToPointer<T>::Result const * Result;
+	typedef T const * Result;
+};
+template <typename T> struct ArrayToPointer <T volatile []>
+{
+	//typedef typename ArrayToPointer<T>::Result volatile * Result;
+	typedef T volatile * Result;
+};
+template <typename T> struct ArrayToPointer <T const volatile []>
+{
+	//typedef typename ArrayToPointer<T>::Result const volatile * Result;
+	typedef T const volatile * Result;
+};
+#ifndef G_COMPILER_CPPBUILDER
+template <typename T, unsigned int N> struct ArrayToPointer <T [N]>
+{
+	//typedef typename ArrayToPointer<T>::Result * Result;
+	typedef T * Result;
+};
+template <typename T, unsigned int N> struct ArrayToPointer <T const [N]>
+{
+	//typedef typename ArrayToPointer<T>::Result const * Result;
+	typedef T const * Result;
+};
+template <typename T, unsigned int N> struct ArrayToPointer <T volatile [N]>
+{
+	//typedef typename ArrayToPointer<T>::Result volatile * Result;
+	typedef T volatile * Result;
+};
+template <typename T, unsigned int N> struct ArrayToPointer <T const volatile [N]>
+{
+	//typedef typename ArrayToPointer<T>::Result const volatile * Result;
+	typedef T const volatile * Result;
+};
+#endif
+
+#endif
+
 
 template <typename T>
 struct AddReference
@@ -335,6 +388,19 @@ template <typename T> struct ExtractRawType <T volatile> { typedef typename Extr
 template <typename T> struct ExtractRawType <T const volatile> { typedef typename ExtractRawType<T>::Result Result; };
 template <typename T> struct ExtractRawType <T *> { typedef typename ExtractRawType<T>::Result Result; };
 template <typename T> struct ExtractRawType <T &> { typedef typename ExtractRawType<T>::Result Result; };
+//scturner updated for arrays
+template <typename T> struct ExtractRawType <T []> { typedef typename ExtractRawType<T>::Result Result[]; };
+template <typename T> struct ExtractRawType <T const []> { typedef typename ExtractRawType<T>::Result Result[]; };
+template <typename T> struct ExtractRawType <T volatile []> { typedef typename ExtractRawType<T>::Result Result[]; };
+template <typename T> struct ExtractRawType <T const volatile []> { typedef typename ExtractRawType<T>::Result Result[]; };
+
+#ifndef G_COMPILER_CPPBUILDER
+template <typename T, unsigned int N> struct ExtractRawType <T [N]> { typedef typename ExtractRawType<T>::Result Result[N]; };
+template <typename T, unsigned int N> struct ExtractRawType <T const [N]> { typedef typename ExtractRawType<T>::Result Result[N]; };
+template <typename T, unsigned int N> struct ExtractRawType <T volatile [N]> { typedef typename ExtractRawType<T>::Result Result[N]; };
+template <typename T, unsigned int N> struct ExtractRawType <T const volatile [N]> { typedef typename ExtractRawType<T>::Result Result[N]; };
+#endif
+//end update
 #if G_SUPPORT_RVALUE_REFERENCE
 template <typename T> struct ExtractRawType <T &&> { typedef typename ExtractRawType<T>::Result Result; };
 #endif

@@ -1,0 +1,16 @@
+<project name="metadata" default="clean" basedir=".">
+    <description>
+        Builds the metadata for a set of classes using doxygen and cpgf
+    </description>
+  <!-- set global properties for this build -->
+  <property name="metadataDir" location="meta"/>
+  
+  
+   <target name="clean"
+        description="clean up (before rebuilding)" >
+    <!-- Delete the ${metadataDir} directory trees -->
+    <!--	<modified /> -->
+    <delete dir="${metadataDir}"/>
+  </target>
+ 
+</project>

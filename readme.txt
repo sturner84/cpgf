@@ -1,3 +1,17 @@
+cpgf for LookingGlass
+
+This is a slightly modified version of cpgf that includes more type information.
+It is designed for user with the LookingGlass library and provides the basis 
+for that project.
+
+It also will eventually allow users to enumerate all fields and methods 
+declared by a class regardless of its visibility.  Private and protected methods
+will not be callable, but the user could determines what is being defined in the
+class.
+
+
+The original readme is below.
+
 cpgf library
 
 

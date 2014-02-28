@@ -73,6 +73,10 @@ struct GMetaTypeDeduce
 {
 private:
 	typedef typename StripBaseType<T>::Result BaseType;
+	//scturner
+	#ifdef G_CONVERT_ARRAYS_TO_POINTERS
+		typedef typename ArrayToPointer<typename StripNonPointer<T>::Result>::Result ArrayAsPointerNoCV;
+	#endif
 	typedef typename StripNonPointer<T>::Result PointerNoCV;
 	typedef typename RemoveConstVolatile<T>::Result NoCV;
 
@@ -82,12 +86,18 @@ public:
 			| (IsConst<T>::Result ? mtFlagIsConst : 0)
 			| (IsVolatile<T>::Result ? mtFlagIsVolatile : 0)
 			| (IsConstVolatile<T>::Result ? mtFlagIsConstVolatile : 0)
-
+			//scturner
+#ifdef G_CONVERT_ARRAYS_TO_POINTERS
+			| ((PointerDimension<ArrayAsPointerNoCV>::Result > 0) ? mtFlagIsPointer : 0)
+			| (IsConst<typename RemovePointer<ArrayAsPointerNoCV>::Result>::Result ? mtFlagIsPointerToConst : 0)
+			| (IsVolatile<typename RemovePointer<ArrayAsPointerNoCV>::Result>::Result ? mtFlagIsPointerToVolatile : 0)
+			| (IsConstVolatile<typename RemovePointer<ArrayAsPointerNoCV>::Result>::Result ? mtFlagIsPointerToConstVolatile : 0)
+#else
 			| ((PointerDimension<PointerNoCV>::Result > 0) ? mtFlagIsPointer : 0)
 			| (IsConst<typename RemovePointer<PointerNoCV>::Result>::Result ? mtFlagIsPointerToConst : 0)
 			| (IsVolatile<typename RemovePointer<PointerNoCV>::Result>::Result ? mtFlagIsPointerToVolatile : 0)
 			| (IsConstVolatile<typename RemovePointer<PointerNoCV>::Result>::Result ? mtFlagIsPointerToConstVolatile : 0)
-
+#endif
 			| (IsReference<NoCV>::Result ? mtFlagIsReference : 0)
 			| (IsConst<typename RemoveReference<NoCV>::Result>::Result ? mtFlagIsReferenceToConst : 0)
 			| (IsVolatile<typename RemoveReference<NoCV>::Result>::Result ? mtFlagIsReferenceToVolatile : 0)
@@ -113,12 +123,22 @@ public:
 template <typename T>
 void deduceMetaTypeData(GMetaTypeData * data)
 {
+	//	//std::cout << "deducing\n";
+	//	fprintf(stdout, "%s\n", "deducing");
 	data->baseName = NULL;
 	data->flags = GMetaTypeDeduce<T>::Flags;
+	//	fprintf(stdout, "%s %d\n", "Flags", data->flags);
+	//	fflush(stdout);
 	deduceVariantType<T>(data->typeData);
 	
 	if(IsArray<typename StripBaseType<T>::Result>::Result) {
+		//TODO scturner fix this
+#ifdef G_CONVERT_ARRAYS_TO_POINTERS
+		//		fprintf(stdout, "%s\n", "Pointers");
+		vtSetPointers(data->typeData, PointerDimension<typename ArrayToPointer<typename StripNonPointer<T>::Result>::Result>::Result);
+#else
 		vtSetPointers(data->typeData, PointerDimension<typename StripNonPointer<T>::Result>::Result);
+#endif
 	}
 }
 

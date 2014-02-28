@@ -13,6 +13,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import org.cpgf.metagen.Config;
 import org.cpgf.metagen.MetaException;
 import org.cpgf.metagen.Util;
+//scturner
+//import org.cpgf.metagen.filters.*;
 import org.cpgf.metagen.metadata.Constant;
 import org.cpgf.metagen.metadata.Constructor;
 import org.cpgf.metagen.metadata.CppClass;
@@ -95,12 +97,161 @@ public class DoxygenXmlParser {
 		this.namespaceStack.remove(this.namespaceStack.size() - 1);
 	}
 	
-	private CppType getType(Node node) {
-		String baseType = Util.getNodeText(Util.getNode(node, "type"));
-		String array = Util.getNodeText(Util.getNode(node, "array"));
+		//scturner updated
+		private List<Integer> getDimensions(String arrayDim) {
+		    ArrayList<Integer> dims = new ArrayList<Integer>();
+		    
+		    Pattern pattern = Pattern.compile("(?:\\[(.*?)\\])");
+		    Matcher match = pattern.matcher(arrayDim);
+		    
+		    int start = 0;
+	        while (start < arrayDim.length()) {
+	            match.region(start, arrayDim.length());   
+	            if (match.find()) {
+	                String strVal = arrayDim.substring(match.start(1), 
+	                    match.end(1));
+	                int val = -1;
+	                
+	                if (!strVal.isEmpty()) {
+	                    try {
+	                        val = Integer.parseInt(strVal);
+	                    }
+	                    catch (NumberFormatException e) {
+	                        //try a char
+	                        //using a char like 'a'
+	                        if (strVal.charAt(0) == '\''
+	                            && strVal.charAt(strVal.length() - 1) == '\'') {
+	                            if (strVal.length() == 3) { 
+	                                val = strVal.charAt(1);
+	                            }
+	                            if (strVal.length() == 4 && strVal.charAt(1) == '\\') {
+	                                switch (strVal.charAt(2)) {
+	                                    case 'b': val = '\b'; break;
+	                                    case 'r': val = '\r'; break;
+	                                    case 'n': val = '\n'; break;
+	                                    case 't': val = '\t'; break;
+	                                    case '\"': val = '\"'; break;
+	                                    case '\'': val = '\''; break;
+	                                    case '0': val = '\0'; break;
+	                                    case '\\': val = '\\'; break;                                    
+	                                }
+	                            }
+	                        }
+	                        
+	//                        strVal = strVal.replaceAll("\\\\(\\w)", "\b");
+	                        
+	                        
+	                    }
+	                }
+	                
+	                dims.add(val);                
+	                start = match.end();
+	            }
+	            else {
+	                start = arrayDim.length();
+	            }
+	        }           
+		    
+		    return dims;
+		}
+		//scturner updated
+		private String checkInitializedArray(String arrayDim, String initStr) {
+		    //remove all spaces as they are not needed
+		    String dimStr = arrayDim.replaceAll("\\s+", "");
+		    if (dimStr.indexOf("[]") < 0 || initStr == null 
+		           || initStr.trim().isEmpty()) {
+		        return dimStr;
+		    }
+		    //find other dimensions
+		    List<Integer> dims = getDimensions(dimStr);
+		    
+		    
+		    /*
+		     * int array1dInit[] = {1, 2, 3, 4, 5, 6};        
+	            int array2dPart[][2] = {{1, 2}, {3, 4}, {5, 6}};            
+		     */
+		      
+		    //replace strings and chars
+		    String mInitStr = initStr.replaceAll("(?:\\\".*?\\\")|(?:\\'.*?\\')", "");
+		    //replace anything in ( )
+		    mInitStr = mInitStr.replaceAll("(?:\\(.*?\\))", "");
+		    //that should leave only , between the elements
+		    //get rid of { } and whitespace
+		    mInitStr = mInitStr.replaceAll("[{}\\s]", "");
+		    
+		    int commaCount = 0;
+		    for (int i = 0; i < mInitStr.length(); i++) {
+		        if (mInitStr.charAt(i) == ',') {
+		            commaCount++;
+		        }
+		    }
+		    //add in the last element if there is not a comma at the end
+		    if (mInitStr.charAt(mInitStr.length() - 1) != ',') {
+		        commaCount++;
+		    }
+		    
+		    for (int i : dims) {
+		        if (i != -1) {
+		            //divide commaCount by the dimension
+		            //to get rid of the dimension
+		            //it should always be even
+		            commaCount /= i;   
+		        }
+		    }
+		    String correctedDims = "";
+	    
+		    for (int i : dims) {
+	            if (i != -1) {
+	                correctedDims += "[" + i + "]";
+	            }
+	            else {
+	                correctedDims += "[" + commaCount + "]";
+	            }
+		    }
+		    
+		    return correctedDims;
+		}
+		
+	
+		private CppType getType(Node node) {
+			String baseType = Util.getNodeText(Util.getNode(node, "type"));
+			String array = Util.getNodeText(Util.getNode(node, "array"));
+			//scturner updated
 
-		return new CppType(this.metaInfo.getTypeSolver(), baseType, array);
-	}
+			//checks for a size value in the array
+			String stdArray = Util.getNodeText(Util.getNode(node, "argsstring"));
+			if (stdArray != null) {
+				int arrayStart = stdArray.indexOf('[');
+				int arrayEnd = stdArray.lastIndexOf(']');
+				if (arrayStart >= 0 && arrayEnd >= 0 && arrayStart < arrayEnd) {
+					stdArray = stdArray.substring(arrayStart, arrayEnd + 1);
+					stdArray = checkInitializedArray(stdArray, 
+							Util.getNodeText(Util.getNode(node, "initializer")));
+				}
+				else {
+					stdArray = "";
+				}
+				if (array != null) {
+					array += stdArray;
+				}
+				else {
+					array = stdArray;
+				}
+			}
+			//checks for volatile in the type
+			//Doxygen doesn't seem to pick up volatile if it is first
+			// i.e. if it is declared int volatile x; type = int volatile
+			//      if it is declared volatile int x; type = int
+			String def = Util.getNodeText(Util.getNode(node, "definition"));
+			if (def != null && def.matches("(^|\\s)*volatile\\s.*") &&
+					(!baseType.matches(".*(^|\\s)*volatile($|\\s).*"))) {
+				//add volatile to the base type and let the reflection library
+				//handle reordering the modifiers
+				baseType = "volatile " + baseType;
+			}
+
+			return new CppType(this.metaInfo.getTypeSolver(), baseType, array);
+		}
 	
 	private String getLocation(Node node) {
 		Node child = Util.getNode(node, "location");
@@ -289,10 +440,14 @@ public class DoxygenXmlParser {
 	}
 
 	private Item doParseMethod(Node node, String name) {
+		
 		if(! this.getCurrentClass().isGlobal()) {
 			if(name.indexOf('~') >= 0 && ! name.matches("operator\\s*~")) {
 				Destructor destructor = new Destructor();
 				this.getCurrentClass().setDestructor(destructor);
+
+				//scturner scturner added virtual support
+				destructor.setVirtual(Util.getAttribute(node, "virt").equals("virtual"));
 
 				return destructor;
 			}
@@ -329,6 +484,12 @@ public class DoxygenXmlParser {
 			this.getCurrentClass().getOperatorList().add(operator);
 
 			return operator;
+		}
+
+		//modified scturner
+		if (config.reflectMain && Config.MAIN_NAME.equals(name) 
+				&& config.reflectMainName != null) {
+			name = config.reflectMainName;
 		}
 
 		// method
@@ -402,7 +563,20 @@ public class DoxygenXmlParser {
 		CppField field = new CppField(name, this.getType(node));
 		
 		field.setStatic(Util.isValueYes(Util.getAttribute(node, "static")));
-		
+
+		//scturner added saturner
+		List<Node> initializers = Util.getChildNodesByName(node, "initializer");
+		//should only be one
+		if (initializers.size() >= 1) {
+			field.setInitializer(Util.getNodeText(initializers.get(0)));
+		}
+		//it is a constant if there is no pointer after the const
+		field.setConst(field.getType().getLiteralType().matches(
+				".*(^|\\s|[*])const($|\\s|&)[^*]*")); 
+		//		System.out.println(field.getType().getLiteralType() + " " + field.getType().getLiteralType().matches(
+		//		    ".*(^|\\s|[*])const($|\\s|&)[^*]*"));
+		//end addition
+
 		Node bitFieldNode = Util.getNode(node, "bitfield");
 		if(bitFieldNode != null) {
 			field.setBitField(Integer.parseInt(Util.getNodeText(bitFieldNode)));

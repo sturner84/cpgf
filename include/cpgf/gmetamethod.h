@@ -21,10 +21,16 @@ private:
 	typedef GMetaCallable super;
 
 public:
+	//scturner
+	//#ifdef G_ADD_TYPE_INFO
 	template <typename OT, typename FT, typename Policy>
-	static GMetaMethod * newMethod(const char * name, const FT & func, const Policy & policy) {
-		GMetaMethod * method = new GMetaMethod(name, createMetaType<FT>(), meta_internal::GMetaMethodCallbackMaker<OT, FT>::make(func), policy);
-
+	static GMetaMethod * newMethod(const char * name, const FT & func, const Policy & policy G_ADD_TYPE_INFO_PARAM_LAST) {
+		GMetaMethod * method = new GMetaMethod(name, createMetaType<FT>(), meta_internal::GMetaMethodCallbackMaker<OT, FT>::make(func), policy G_ADD_TYPE_INFO_ACT_PARAM_LAST);
+		//#else
+		//	template <typename OT, typename FT, typename Policy>
+		//	static GMetaMethod * newMethod(const char * name, const FT & func, const Policy & policy) {
+		//		GMetaMethod * method = new GMetaMethod(name, createMetaType<FT>(), meta_internal::GMetaMethodCallbackMaker<OT, FT>::make(func), policy);
+		//#endif
 		if(! PolicyHasRule<Policy, GMetaRuleExplicitThis>::Result) {
 			method->addModifier(meta_internal::GMetaMethodCallbackMaker<OT, FT>::modifiers);
 		}
@@ -33,10 +39,18 @@ public:
 	}
 
 public:
+	//scturner
+	//#ifdef G_ADD_TYPE_INFO
 	template <typename CT, typename Policy>
-	GMetaMethod(const char * name, const GMetaType & itemType, const CT & callback, const Policy & policy)
-		: super(name, itemType, mcatMethod), baseData(new meta_internal::GMetaMethodData<CT, Policy>(callback, policy)) {
+	GMetaMethod(const char * name, const GMetaType & itemType, const CT & callback, const Policy & policy G_ADD_TYPE_INFO_PARAM_LAST)
+	: super(name, itemType, mcatMethod), baseData(new meta_internal::GMetaMethodData<CT, Policy>(callback, policy G_ADD_TYPE_INFO_ACT_PARAM_LAST)) {
 	}
+	//#else
+	//	template <typename CT, typename Policy>
+	//		GMetaMethod(const char * name, const GMetaType & itemType, const CT & callback, const Policy & policy)
+	//			: super(name, itemType, mcatMethod), baseData(new meta_internal::GMetaMethodData<CT, Policy>(callback, policy)) {
+	//		}
+	//#endif
 
 	virtual GMetaType getParamType(size_t index) const;
 	virtual size_t getParamCount() const;
@@ -81,22 +95,26 @@ private:
 
 public:
 	template <typename OT, typename Signature, typename Policy>
-	static GMetaConstructor * newConstructor(const Policy & policy) {
+	//scturner
+	static GMetaConstructor * newConstructor(const Policy & policy, const char * paramTypes = NULL) {
 		GMetaConstructor * metaConstructor = new GMetaConstructor(
 				GCallback<Signature>(
 					meta_internal::GMetaConstructorInvoker<GFunctionTraits<Signature>::Arity, OT, typename GFunctionTraits<Signature>::ArgList>()
 				),
-				policy
+				policy,
+				paramTypes
 			);
 
 		return metaConstructor;
 	}
 
 	template <typename OT, typename FT, typename Policy>
-	static GMetaConstructor * newConstructor(const FT & func, const Policy & policy) {
+	//scturner
+	static GMetaConstructor * newConstructor(const FT & func, const Policy & policy, const char * paramTypes = NULL ) {
 		GMetaConstructor * metaConstructor = new GMetaConstructor(
 				meta_internal::GMetaMethodCallbackMaker<OT, FT>::make(func),
-				policy
+				policy,
+				paramTypes
 			);
 
 		return metaConstructor;
@@ -104,9 +122,10 @@ public:
 
 public:
 	template <typename CT, typename Policy>
-	GMetaConstructor(const CT & callback, const Policy & policy)
+	//scturner
+	GMetaConstructor(const CT & callback, const Policy & policy, const char * paramTypes = NULL)
 		: super(meta_internal::arityToName(CT::TraitsType::Arity).c_str(), createMetaType<typename CT::TraitsType::FullType>(), mcatConstructor),
-			baseData(new meta_internal::GMetaMethodData<CT, Policy>(callback, policy)) {
+		  baseData(new meta_internal::GMetaMethodData<CT, Policy>(callback, policy, paramTypes)) {
 	}
 
 	virtual GMetaType getParamType(size_t index) const;

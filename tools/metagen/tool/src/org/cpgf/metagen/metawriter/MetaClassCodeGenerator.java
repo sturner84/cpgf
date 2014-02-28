@@ -28,6 +28,9 @@ public class MetaClassCodeGenerator {
 	private String extraHeaderCodeInClass;
 	
 	private ClassWrapperWriter wrapperWriter;
+		
+	//added scturner
+	public static final String TEMPLATE_NAME = "METAGEN_TEMP_VAL";
 
 	public MetaClassCodeGenerator(Config config, MetaInfo metaInfo, CppClass cppClass, String sourceFileName) {
 		this.config = config;
@@ -50,14 +53,16 @@ public class MetaClassCodeGenerator {
 	}
 
 	private void beginMetaFunction(CppWriter codeWriter, String name, CppClass cppClass) {
-		codeWriter.write("template <typename D");
+		//modified scturner
+		codeWriter.write("template <typename " + TEMPLATE_NAME);
 		if(cppClass.isTemplate()) {
 			for(Parameter param : cppClass.getTemplateParameterList()) {
 				codeWriter.write(", " + param.getType().getLiteralType() + " " + param.getName());
 			}
 		}
 		codeWriter.writeLine(">");
-		codeWriter.writeLine("void " + name + "(const cpgf::GMetaDataConfigFlags & config, D _d)");
+		//modified scturner
+		codeWriter.writeLine("void " + name + "(const cpgf::GMetaDataConfigFlags & config, " + TEMPLATE_NAME + " _d)");
 		codeWriter.beginBlock();
 		codeWriter.writeLine("(void)config; (void)_d; (void)_d;");
 		codeWriter.useNamespace("cpgf");
@@ -124,7 +129,8 @@ public class MetaClassCodeGenerator {
 		String result = "";
 		
 		if(invokable.isConstructor()) {
-			result = result + "_d.CPGF_MD_TEMPLATE _constructor(&" + name + ");";
+			//scturner
+			result = result + "_d.CPGF_MD_TEMPLATE _constructorEx(&" + name + ");";
 		}
 		
 		return result;

@@ -262,11 +262,33 @@ public:
 		);
 	}
 	
+
+	//scturner added type signature
+	template <typename FT>
+	GDefineMetaMethod<DerivedType> _methodEx(const char * name, const char * paramTypes, FT func) {
+		return GDefineMetaMethod<DerivedType>(
+				this->metaClass,
+				this->metaClass->addMethod(GMetaMethod::newMethod<ClassType>(name, func, GMetaPolicyDefault() G_ADD_TYPE_INFO_ACT_PARAM_LAST))
+		);
+	}
+
+	//scturner added type signature
+	template <typename FT, typename Policy>
+	GDefineMetaMethod<DerivedType> _methodEx(const char * name, const char * paramTypes, FT func, const Policy & policy) {
+		return GDefineMetaMethod<DerivedType>(
+				this->metaClass,
+				this->metaClass->addMethod(GMetaMethod::newMethod<ClassType>(name, func, policy G_ADD_TYPE_INFO_ACT_PARAM_LAST))
+		);
+	}
+
+
+
 	template <typename FT>
 	GDefineMetaField<DerivedType> _field(const char * name, FT field) {
 		return GDefineMetaField<DerivedType>(
 			this->metaClass,
-			this->metaClass->addField(new GMetaField(name, field, GMetaPolicyDefault()))
+			//scturner
+			this->metaClass->addField(new GMetaField(name, field, GMetaPolicyDefault(), NULL))
 		);
 	}
 
@@ -274,9 +296,30 @@ public:
 	GDefineMetaField<DerivedType> _field(const char * name, FT field, const Policy & policy) {
 		return GDefineMetaField<DerivedType>(
 			this->metaClass,
-			this->metaClass->addField(new GMetaField(name, field, policy))
+			//scturner
+			this->metaClass->addField(new GMetaField(name, field, policy, NULL))
 		);
 	}
+
+
+	//scturner added type signature
+	template <typename FT>
+	GDefineMetaField<DerivedType> _fieldEx(const char * name, const char * paramTypes, FT field) {
+		return GDefineMetaField<DerivedType>(
+				this->metaClass,
+				this->metaClass->addField(new GMetaField(name, field, GMetaPolicyDefault() G_ADD_TYPE_INFO_ACT_PARAM_LAST))
+		);
+	}
+	//scturner added type signature
+	template <typename FT, typename Policy>
+	GDefineMetaField<DerivedType> _fieldEx(const char * name, const char * paramTypes, FT field, const Policy & policy) {
+		return GDefineMetaField<DerivedType>(
+				this->metaClass,
+				this->metaClass->addField(new GMetaField(name, field, policy G_ADD_TYPE_INFO_ACT_PARAM_LAST))
+		);
+	}
+
+
 
 	template <typename Getter, typename Setter>
 	GDefineMetaProperty<DerivedType> _property(const char * name, const Getter & getter, const Setter & setter) {
@@ -294,6 +337,28 @@ public:
 		);
 	}
 
+
+
+	//TODO finish this
+	//scturner added type signature
+	template <typename Getter, typename Setter>
+	GDefineMetaProperty<DerivedType> _propertyEx(const char * name, const char * paramType, const Getter & getter, const Setter & setter) {
+		return GDefineMetaProperty<DerivedType>(
+				this->metaClass,
+				this->metaClass->addProperty(new GMetaProperty(name, getter, setter, GMetaPolicyDefault()))
+		);
+	}
+	//scturner added type signature
+	template <typename Getter, typename Setter, typename Policy>
+	GDefineMetaProperty<DerivedType> _propertyEx(const char * name, const char * paramType, const Getter & getter, const Setter & setter, const Policy & policy) {
+		return GDefineMetaProperty<DerivedType>(
+				this->metaClass,
+				this->metaClass->addProperty(new GMetaProperty(name, getter, setter, policy))
+		);
+	}
+
+
+
 	template <typename FT, typename Creator>
 	GDefineMetaOperator<DerivedType> _operator(const Creator & creator) {
 		return GDefineMetaOperator<DerivedType>(
@@ -309,6 +374,26 @@ public:
 			this->metaClass->addOperator(new GMetaOperator(creator.template create<ClassType, FT>(policy)))
 		);
 	}
+
+
+	//scturner added type signature
+	template <typename FT, typename Creator>
+	GDefineMetaOperator<DerivedType> _operatorEx(const char * paramTypes, const Creator & creator) {
+		return GDefineMetaOperator<DerivedType>(
+				this->metaClass,
+				this->metaClass->addOperator(new GMetaOperator(creator.template create<ClassType, FT>(GMetaPolicyDefault() G_ADD_TYPE_INFO_ACT_PARAM_LAST)))
+		);
+	}
+	//scturner added type signature
+	template <typename FT, typename Creator, typename Policy>
+	GDefineMetaOperator<DerivedType> _operatorEx(const char * paramTypes, const Creator & creator, const Policy & policy) {
+		return GDefineMetaOperator<DerivedType>(
+				this->metaClass,
+				this->metaClass->addOperator(new GMetaOperator(creator.template create<ClassType, FT>(policy G_ADD_TYPE_INFO_ACT_PARAM_LAST)))
+		);
+	}
+
+
 
 	template <typename T>
 	GDefineMetaEnum<DerivedType> _enum(const char * name) {
@@ -483,6 +568,43 @@ public:
 			this->metaClass->addConstructor(GMetaConstructor::newConstructor<ClassType, FT>(func, policy))
 		);
 	}
+
+
+
+
+	//scturner added type signature
+	template <typename FT>
+	GDefineMetaConstructor<ThisType> _constructorEx(const char * paramTypes) {
+		return GDefineMetaConstructor<ThisType>(
+				this->metaClass,
+				this->metaClass->addConstructor(GMetaConstructor::newConstructor<ClassType, FT>(GMetaPolicyDefault() G_ADD_TYPE_INFO_ACT_PARAM_LAST))
+		);
+	}
+	//scturner added type signature
+	template <typename FT, typename Policy>
+	GDefineMetaConstructor<ThisType> _constructorEx(const char * paramTypes, const Policy & policy) {
+		return GDefineMetaConstructor<ThisType>(
+				this->metaClass,
+				this->metaClass->addConstructor(GMetaConstructor::newConstructor<ClassType, FT>(policy G_ADD_TYPE_INFO_ACT_PARAM_LAST))
+		);
+	}
+	//scturner added type signature
+	template <typename FT>
+	GDefineMetaConstructor<ThisType> _constructorEx(const char * paramTypes, const FT & func) {
+		return GDefineMetaConstructor<ThisType>(
+				this->metaClass,
+				this->metaClass->addConstructor(GMetaConstructor::newConstructor<ClassType, FT>(func, GMetaPolicyDefault() G_ADD_TYPE_INFO_ACT_PARAM_LAST))
+		);
+	}
+	//scturner added type signature
+	template <typename FT, typename Policy>
+	GDefineMetaConstructor<ThisType> _constructorEx(const char * paramTypes, const FT & func, const Policy & policy) {
+		return GDefineMetaConstructor<ThisType>(
+				this->metaClass,
+				this->metaClass->addConstructor(GMetaConstructor::newConstructor<ClassType, FT>(func, policy G_ADD_TYPE_INFO_ACT_PARAM_LAST))
+		);
+	}
+
 
 	GDefineMetaInfo getMetaInfo() const {
 		return GDefineMetaInfo(this->metaClass, this->dangling);

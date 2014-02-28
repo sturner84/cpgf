@@ -10,6 +10,8 @@ struct IVariantShadowObject : public IObject
 {
 public:
 	virtual void * G_API_CC getObject() = 0;
+
+	virtual ~IVariantShadowObject() {}
 };
 
 template <typename T>
@@ -620,11 +622,13 @@ struct CastFromReference
 				return variant_internal::CastVariantHelper<const void *, RefValueType>::cast(*static_cast<void **>(const_cast<void *>(v.refData().ptrPointer)));
 
 			case vtObject | byReference:
-				return castFromObject<T>(v.refData().ptrObject);
+				//scturner changed from T
+				return castFromObject<ResultType>(v.refData().ptrObject);
 		}
 
 		failedCast();
-		return *(typename RemoveReference<T>::Result *)0xffffff;
+		//scturner changed from T
+		return *(typename RemoveReference<ResultType>::Result *)0xffffff;
 	}
 	
 };
@@ -710,7 +714,8 @@ struct CastFromVariant
 	typedef typename variant_internal::ArrayToPointer<typename RemoveReference<T>::Result>::Result RefValueType;
 
 	static ResultType cast(const GVariant & v) {
-		checkFailCast(canFromVariant<T>(v));
+		//scturner changed from T
+		checkFailCast(canFromVariant<ResultType>(v));
 
 		int vt = static_cast<int>(vtGetType(v.refData().typeData));
 		switch(vt) {
@@ -766,10 +771,12 @@ struct CastFromVariant
 				return variant_internal::CastVariantHelper<const volatile void *, ResultType>::cast(v.refData().valuePointer);
 
 			case vtObject:
-				return castFromObject<T>(v.refData().ptrObject);
+				//scturner changed from T
+				return castFromObject<ResultType>(v.refData().ptrObject);
 
 			case vtShadow:
-				return castFromObject<T>(v.refData().shadowObject->getObject());
+				//scturner changed from T
+				return castFromObject<ResultType>(v.refData().shadowObject->getObject());
 			
 			case vtString:
 				return castFromString<ResultType>(const_cast<char *>(static_cast<std::string *>(v.refData().shadowObject->getObject())->c_str()));
@@ -842,14 +849,16 @@ struct CastFromVariant
 
 			default:
 				if((vt & byReference) != 0) {
-					return CastFromReference<T, Policy>::cast(v);
+					//scturner changed from T
+					return CastFromReference<ResultType, Policy>::cast(v);
 				}
 				break;
 
 		}
 
 		failedCast();
-		return *(typename RemoveReference<T>::Result *)0xffffff;
+		//scturner changed from T
+		return *(typename RemoveReference<ResultType>::Result *)0xffffff;
 	}
 };
 

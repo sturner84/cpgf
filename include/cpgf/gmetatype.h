@@ -161,10 +161,24 @@ private:
 };
 
 template <typename T>
-GMetaType createMetaType()
+//scturner
+GMetaType createMetaType(const char *name = NULL)
 {
 	GMetaTypeData data = GMetaTypeData();
+	//scturner testing
+	//	fprintf(stdout, "1: %s\n", name);
+	//	fflush(stdout);
+
 	meta_internal::deduceMetaTypeData<T>(&data);
+	//scturner
+	if (data.baseName == NULL)
+	{
+		data.baseName = name;
+	}
+	//scturner testing
+	//	fprintf(stdout, "2: %s\n", data.baseName);
+	//	fflush(stdout);
+	//std::cout << data.baseName;
 	return GMetaType(data, meta_internal::GMetaTypeDeduce<T>::getBaseType());
 }
 

@@ -10,6 +10,9 @@
 #include "cpgf/gcallback.h"
 #include "cpgf/gexception.h"
 
+//scturner
+#include <map>
+#include <iostream>
 
 #if defined(_MSC_VER)
 #pragma warning(push)
@@ -23,9 +26,16 @@ extern int Error_Meta_ParamOutOfIndex;
 
 namespace meta_internal {
 
+#ifdef G_ADD_TYPE_INFO
+//scturner method type fix
+#define REF_GETPARAM_TYPE_NAME_HELPER(I) \
+	(I < typeNames[virtualGetParamType].size()) ? typeNames[virtualGetParamType][I].c_str() : ""
+#else
+#define REF_GETPARAM_TYPE_NAME_HELPER(I)
+#endif
 
-#define REF_GETPARAM_TYPE_HELPER(N, unused) \
-	case N: return createMetaType<typename TypeList_GetWithDefault<typename CallbackT::TraitsType::ArgTypeList, N>::Result>();
+#define REF_GETPARAM_TYPE_HELPER(N, I) \
+	case N: return createMetaType<typename TypeList_GetWithDefault<typename CallbackT::TraitsType::ArgTypeList, N>::Result>(REF_GETPARAM_TYPE_NAME_HELPER(I));
 
 #define REF_GETPARAM_EXTENDTYPE_HELPER(N, unused) \
 	case N: return createMetaExtendType<typename TypeList_GetWithDefault<typename CallbackT::TraitsType::ArgTypeList, N>::Result>(flags);
@@ -89,6 +99,13 @@ public:
 protected:
 	GMetaMethodDataVirtual * virtualFunctions;
 
+	//scturner
+	#ifdef G_ADD_TYPE_INFO
+		//TODO method type fix
+		static std::map<GMetaType (*)(), std::string> returnTypes;
+		static std::map<GMetaType (*)(size_t), std::vector<std::string> > typeNames;
+	#endif
+
 private:
 	mutable GScopedPointer<GMetaDefaultParamList> defaultParamList;
 };
@@ -120,10 +137,19 @@ private:
 	}
 
 	static GMetaType virtualGetParamType(size_t index) {
+		//scturner
+#ifdef G_ADD_TYPE_INFO
+		size_t origIndex = index;
+#endif
 		meta_internal::adjustParamIndex(index, PolicyHasRule<Policy, GMetaRuleExplicitThis>::Result);
 
 		switch(index) {
+#ifdef G_ADD_TYPE_INFO
+			//scturner method types fix
+			GPP_REPEAT(REF_MAX_ARITY, REF_GETPARAM_TYPE_HELPER, origIndex)
+#else
 			GPP_REPEAT(REF_MAX_ARITY, REF_GETPARAM_TYPE_HELPER, GPP_EMPTY)
+#endif
 
 			default:
 				raiseCoreException(Error_Meta_ParamOutOfIndex);
@@ -132,8 +158,60 @@ private:
 	}
 
 	static GMetaType virtualGetResultType() {
+#ifdef G_ADD_TYPE_INFO
+		//scturner method types fix
+		return createMetaType<typename CallbackT::TraitsType::ResultType>(returnTypes[virtualGetResultType].c_str());
+#else
 		return createMetaType<typename CallbackT::TraitsType::ResultType>();
+#endif
+
 	}
+
+	//scturner
+#ifdef G_ADD_TYPE_INFO
+	//scturner method types fix
+	static void parseParamTypes(const char * paramTypes)
+	{
+		if (paramTypes != NULL)
+		{
+			//std::string returnType;
+			std::vector<std::string> types;
+
+			std::string pTypes = paramTypes;
+			size_t start = 0;
+			size_t pos = pTypes.find(',', start);
+			if (pos != std::string::npos)
+			{
+				//returnType = pTypes.substr(start, pos - start);
+				returnTypes.insert(std::pair<GMetaType (*)(), std::string>(virtualGetResultType, pTypes.substr(start, pos - start)));
+				start = pos + 1;
+				pos = pTypes.find(',', start);
+				while (pos != std::string::npos)
+				{
+					types.push_back(pTypes.substr(start, pos - start));
+					start = pos + 1;
+					pos = pTypes.find(',', start);
+				}
+				//get last one
+				types.push_back(pTypes.substr(start, pos - start));
+
+				typeNames.insert(std::pair<GMetaType (*)(size_t), std::vector<std::string> >(virtualGetParamType, types));
+			}
+			else
+			{
+				returnTypes.insert(std::pair<GMetaType (*)(), std::string>(virtualGetResultType, pTypes));
+				std::vector<std::string> types;
+				typeNames.insert(std::pair<GMetaType (*)(size_t), std::vector<std::string> >(virtualGetParamType, types));
+			}
+		}
+		else { //default values
+			returnTypes.insert(std::pair<GMetaType (*)(), std::string>(virtualGetResultType, ""));
+			std::vector<std::string> types;
+			typeNames.insert(std::pair<GMetaType (*)(size_t), std::vector<std::string> >(virtualGetParamType, types));
+		}
+	}
+#endif
+
 
 	static GMetaExtendType virtualGetResultExtendType(uint32_t flags) {
 		return createMetaExtendType<typename CallbackT::TraitsType::ResultType>(flags);
@@ -218,7 +296,12 @@ private:
 	}
 
 public:
-	GMetaMethodData(const CallbackType & cb, const Policy &) : callback(cb) {
+	//scturner
+//#ifdef G_ADD_TYPE_INFO
+	GMetaMethodData(const CallbackType & cb, const Policy & G_ADD_TYPE_INFO_PARAM_LAST) : callback(cb) {
+//#else
+	//		GMetaMethodData(const CallbackType & cb, const Policy &) : callback(cb) {
+//#endif
 		static GMetaMethodDataVirtual thisFunctions = {
 			&virtualBaseMetaDeleter<GMetaMethodData>,
 			&virtualGetParamCount,
@@ -237,6 +320,10 @@ public:
 		};
 
 		this->virtualFunctions = &thisFunctions;
+#ifdef G_ADD_TYPE_INFO
+		//scturner method type fix
+		parseParamTypes(paramTypes);
+#endif
 	}
 
 public:

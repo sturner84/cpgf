@@ -1,23 +1,11 @@
 package org.cpgf.metagen.metawriter;
 
-import java.util.HashMap;
+import java.util.*; //scturner
 
 import org.cpgf.metagen.Config;
 import org.cpgf.metagen.Util;
 import org.cpgf.metagen.codewriter.CppWriter;
-import org.cpgf.metagen.metadata.Constant;
-import org.cpgf.metagen.metadata.Constructor;
-import org.cpgf.metagen.metadata.CppClass;
-import org.cpgf.metagen.metadata.CppEnum;
-import org.cpgf.metagen.metadata.CppField;
-import org.cpgf.metagen.metadata.CppMethod;
-import org.cpgf.metagen.metadata.DeferClass;
-import org.cpgf.metagen.metadata.EnumCategory;
-import org.cpgf.metagen.metadata.EnumValue;
-import org.cpgf.metagen.metadata.Item;
-import org.cpgf.metagen.metadata.MetaInfo;
-import org.cpgf.metagen.metadata.Operator;
-import org.cpgf.metagen.metadata.ParameteredItem;
+import org.cpgf.metagen.metadata.*;
 import org.cpgf.metagen.metawriter.callback.OutputCallbackData;
 
 
@@ -33,7 +21,9 @@ public class MetaClassWriter {
 	private OutputCallbackData callbackData;
 	
 	public MetaClassWriter(Config config, MetaInfo metaInfo, CppWriter codeWriter, CppClass cppClass) {
-		this.initialize(config, metaInfo, codeWriter, cppClass, "_d", "D::ClassType");
+		//modified scturner
+		this.initialize(config, metaInfo, codeWriter, cppClass, "_d", 
+				MetaClassCodeGenerator.TEMPLATE_NAME + "::ClassType");
 	}
 
 	public MetaClassWriter(Config config, MetaInfo metaInfo, CppWriter codeWriter, CppClass cppClass, String define, String classType) {
@@ -146,29 +136,66 @@ public class MetaClassWriter {
 	}
 
 	public void writeConstructorsBind() {
-		String action = WriterUtil.getReflectionAction(this.define, "_constructor");
+		//scturner
+		String action = WriterUtil.getReflectionAction(this.define, "_constructorEx");
 
-		for(Constructor item : this.cppClass.getConstructorList()) {
+		//added by scturner  
+		// this does not seem to be creating default constructors as it should
+		// so this adds them
+		List<Constructor> constructors = this.cppClass.getConstructorList(); 
+		ClassTraits traits = this.cppClass.getTraits();
+		if (constructors.size() == 0 && !traits.isDefaultConstructorHidden()) {
+			Constructor constructor = new Constructor();
+			constructor.setVisibility(EnumVisibility.Public);
+			constructors.add(constructor);
+		}
+
+		for(Constructor item : constructors) {
+		//for(Constructor item : this.cppClass.getConstructorList()) {
 			this.doCallback(item);
 
+//			Util.trace("Constructor: " + cppClass.getLiteralName() + " " +
+//			  skipItem() + " " + ! Util.allowMetaData(this.config, item) + " " +
+//			                item.getVisibility() + " " + item.isTemplate());
 			if(this.shouldSkipItem(item)) {
 				continue;
 			}
 			
+//			Util.trace("Written: " + cppClass.getLiteralName());			
 			this.codeWriter.write(action + "<void * (");
 			WriterUtil.writeParamList(this.codeWriter, item.getParameterList(), false);
-			this.codeWriter.write(")>(" + WriterUtil.getPolicyText(item, false) + ")");
-			
+			this.codeWriter.write(")>(" + WriterUtil.getPolicyText(item, false) + "");
+
+
+			codeWriter.write(getTypeList(item) + ")");
+
 			WriterUtil.writeDefaultParams(this.codeWriter, item.getParameterList());
 		}
 	}
 
+	//scturner
+	private String getTypeList(Constructor item) {
+		//list of types
+		//leaving room for the return type even though there is not one
+		String types = "\"";
+		for (Parameter p : item.getParameterList()) {
+			types += "," + p.getType().getLiteralType();
+		}                
+
+		types += "\"";
+
+		return types;
+	}
+	
 	private void writeFields() {
 		String prefix = this.getScopePrefix();
-		String action = WriterUtil.getReflectionAction(this.define, "_field");
+		//scturner
+		String action = WriterUtil.getReflectionAction(this.define, "_fieldEx");
 
 		for(CppField item : this.cppClass.getFieldList()) {
 			String name = item.getPrimaryName();
+			//scturner
+			String type = item.getType().getLiteralType();
 			
 			this.doCallback(item);
 			
@@ -179,21 +206,25 @@ public class MetaClassWriter {
 			if(name.indexOf('@') >= 0 || name.equals("")) { // anonymous union
 				continue;
 			}
-			
+
 			if(item.isBitField()) {
-				CppField field = (CppField)(item);
+				//scturner
+				CppField field = item;
 				if(WriterUtil.shouldGenerateBitfieldWrapper(this.config, field)) {
 					this.codeWriter.writeLine(WriterUtil.getReflectionAction(this.define, "_property") + "(" + Util.quoteText(name)
+							+ ", " + Util.quoteText(type)
 							+ ", &" + WriterUtil.getBitfieldWrapperGetterName(field)
 							+ ", &" + WriterUtil.getBitfieldWrapperSetterName(field)
-							+ ", cpgf::MakePolicy<cpgf::GMetaRuleGetterExplicitThis, cpgf::GMetaRuleSetterExplicitThis>());"
-							);
+							+ ", cpgf::MakePolicy<cpgf::GMetaRuleGetterExplicitThis, cpgf::GMetaRuleSetterExplicitThis>()" + ");");
 				}
 			}
 			else {
 				this.codeWriter.write(action);
 				this.codeWriter.write("(" + Util.quoteText(name) + ", ");
-				this.codeWriter.writeLine("&" + prefix + name + WriterUtil.getPolicyText(item) + ");");
+				//scturner
+				this.codeWriter.write(Util.quoteText(type) + ", ");
+				this.codeWriter.writeLine("&" + prefix + name 
+						+ WriterUtil.getPolicyText(item) + ");");
 			}
 		}
 	}

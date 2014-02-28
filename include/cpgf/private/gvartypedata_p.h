@@ -7,6 +7,9 @@
 
 namespace variant_internal {
 
+//scturner added forward declaration for array update
+template <typename T>
+struct CheckIsArray;
 
 template <typename T, typename Enabled = void>
 struct DeduceBasicVariantType {
@@ -62,6 +65,26 @@ public:
 	>::Result;
 };
 
+//scturner
+#ifdef G_CONVERT_ARRAYS_TO_POINTERS
+template <typename T>
+struct DeduceVariantType_Helper <T, typename GEnableIfResult<IsArray<T> >::Result> {
+private:
+	static const int temp = DeduceBasicVariantType<typename ExtractRawType<T>::Result>::Result;
+public:
+	static const GVariantType Result = static_cast<GVariantType>(temp | byPointer);
+	//already converted to a pointer by ArrayToPointer
+	static const int Pointers = PointerDimension<
+		typename RemoveConstVolatile<
+			typename RemoveReference<
+				typename RemoveConstVolatile<T>::Result
+			>::Result
+			>::Result
+	>::Result;
+};
+#endif
+
+
 template <typename T>
 struct DeduceVariantType_Helper <T, typename GEnableIfResult<IsReference<T> >::Result> {
 private:
@@ -114,8 +137,14 @@ template <typename T, typename Enable = void>
 struct DeduceVariantType
 {
 private:
-	typedef DeduceVariantType_Helper<typename ArrayToPointer<typename RemoveConstVolatile<T>::Result>::Result> Deducer;
+	//scturner added and modifed for arrays - hasn't fix it
+	typedef ArrayToPointer<typename RemoveConstVolatile<T>::Result> ConvertedType;
+	typedef DeduceVariantType_Helper<typename ConvertedType::Result> Deducer;
+	//typedef DeduceVariantType_Helper<typename ArrayToPointer<typename RemoveConstVolatile<T>::Result>::Result> Deducer;
 public:
+	//scturner modified - this crashing if it is a string
+	//	static const GVariantType Result = CheckIsArray<ConvertedType>::Result ?
+	//			static_cast<GVariantType>(vtObject | byPointer) : Deducer::Result;
 	static const GVariantType Result = Deducer::Result;
 	static const int Pointers = Deducer::Pointers;
 };

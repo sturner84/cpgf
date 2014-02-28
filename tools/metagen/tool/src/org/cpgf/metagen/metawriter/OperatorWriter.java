@@ -13,16 +13,16 @@ public class OperatorWriter {
 	private Operator item;
 	private int realParamCount;
 	private boolean isIncOrDec;
-	
+
 	private List<Parameter> templateDependentParameterList;
-	
+
 	public OperatorWriter(MetaInfo metaInfo, Operator item) {
 		this.metaInfo = metaInfo;
 		this.item = item;
-		
+
 		this.initialize();
 	}
-	
+
 	private void initialize() {
 		boolean isStatic = item.isStatic();
 		this.realParamCount = this.item.getParameterList().size();
@@ -31,50 +31,51 @@ public class OperatorWriter {
 		if(! isStatic) {
 			++this.realParamCount;
 		}
-		
+
 		if(op.equals("->")) {
 			this.realParamCount = 2;
 		}
 
 		this.isIncOrDec = (op.equals("++") || op.equals("--"));
-		
-//		if(this.item.getOwner().isTemplate()) {
-//			for(Parameter templateParam : this.item.getOwner().getTemplateParameterList()) {
-//				for(Parameter param : this.item.getParameterList()) {
-//					if(param.getType().getParsedType().matchSymbol(templateParam.getName())) {
-//						if(this.templateDependentParameterList == null) {
-//							this.templateDependentParameterList = new ArrayList<Parameter>();
-//						}
-//						this.templateDependentParameterList.add(templateParam);
-//					}
-//				}
-//			}
-//		}
+
+		//		if(this.item.getOwner().isTemplate()) {
+		//			for(Parameter templateParam : this.item.getOwner().getTemplateParameterList()) {
+		//				for(Parameter param : this.item.getParameterList()) {
+		//					if(param.getType().getParsedType().matchSymbol(templateParam.getName())) {
+		//						if(this.templateDependentParameterList == null) {
+		//							this.templateDependentParameterList = new ArrayList<Parameter>();
+		//						}
+		//						this.templateDependentParameterList.add(templateParam);
+		//					}
+		//				}
+		//			}
+		//		}
 		if(this.item.getOwner().isTemplate()) {
 			this.templateDependentParameterList = this.item.getOwner().getTemplateParameterList();
 		}
 	}
-	
+
 	public void writeReflectionCode(CppWriter codeWriter, String define) {
-		String action = WriterUtil.getReflectionAction(define, "_operator");
+		//scturner
+		String action = WriterUtil.getReflectionAction(define, "_operatorEx");
 
 		String op = item.getOperator();
-		
+
 		boolean isTypeConvert = this.item.isTypeConverter();
 		String opText = "";
-		
+
 		String self = item.getSelf();
 		if(self == null) {
 			self = "cpgf::GMetaSelf";
 		}
-		
+
 		if(isTypeConvert) {
 			codeWriter.write(action + "<" + op + " (" + self + ")>(");
 			opText = "H()";
 		}
 		else {
 			codeWriter.write(action + "<" + item.getResultType().getLiteralType() + " (*)(");
-			
+
 			boolean hasSelf = item.hasSelf();
 
 			if(hasSelf) {
@@ -125,12 +126,14 @@ public class OperatorWriter {
 		if(op.equals(",")) {
 			opText = "(" + opText + ")"; // one more pair of brackets to avoid compile error
 		}
+		//scturner
+		codeWriter.write(getTypeList() + ",");
 		codeWriter.write(opText);
 		codeWriter.write(WriterUtil.getPolicyText(item) + ")");
 
 		WriterUtil.writeDefaultParams(codeWriter, item.getParameterList());
 	}
-	
+
 	private void writeSelf(CppWriter codeWriter, boolean includeName) {
 		if(this.item.isConst()) {
 			codeWriter.write("const ");
@@ -146,7 +149,7 @@ public class OperatorWriter {
 			codeWriter.write(" self");
 		}
 	}
-	
+
 	private boolean shouldGenerateArraySetter() {
 		return this.item.isArray() && this.item.getResultType().isNonConstValueReference();
 	}
@@ -167,7 +170,7 @@ public class OperatorWriter {
 			WriterUtil.writeParamList(codeWriter, this.item.getParameterList(), true);
 		}
 		codeWriter.write(") ");
-		
+
 		codeWriter.beginBlock();
 		if(this.item.hasResult()) {
 			codeWriter.write("return ");
@@ -203,7 +206,7 @@ public class OperatorWriter {
 		codeWriter.writeLine(";");
 
 		codeWriter.endBlock();
-		
+
 		if(this.shouldGenerateArraySetter()) {
 			if(this.templateDependentParameterList != null) {
 				codeWriter.write("template <");
@@ -218,7 +221,7 @@ public class OperatorWriter {
 			codeWriter.write(", ");
 			codeWriter.write(this.getArraySetterValueType() + " OpsEt_vALue");
 			codeWriter.write(") ");
-			
+
 			codeWriter.beginBlock();
 			codeWriter.write("(*self)[");
 			codeWriter.write(Util.getParameterText(this.item.getParameterList(), false, true));
@@ -226,7 +229,7 @@ public class OperatorWriter {
 			codeWriter.endBlock();
 		}
 	}
-	
+
 	private String getArraySetterValueType() {
 		String typename = "";
 		if(this.item.getOwner().isTemplate()) {
@@ -239,16 +242,19 @@ public class OperatorWriter {
 		String methodName = WriterUtil.getOperatorWraperName(this.metaInfo, this.item);
 		if(this.templateDependentParameterList != null) {
 			methodName = methodName + "<"
-				+ Util.getParameterText(this.templateDependentParameterList, false, true)
-				+ ">"
-			;
+					+ Util.getParameterText(this.templateDependentParameterList, false, true)
+					+ ">"
+					;
 		}
 		String reflectionName = this.metaInfo.getOperatorNameMap().get(this.item);
-
-		String action = WriterUtil.getReflectionAction(define, "_method");
+		//scturner
+		String action = WriterUtil.getReflectionAction(define, "_methodEx");
 
 		codeWriter.write(action);
 		codeWriter.write("(" + Util.quoteText(reflectionName) + ", ");
+		//scturner
+		codeWriter.write(getTypeList() + ", ");
+
 		codeWriter.write("(" + this.item.getResultType().getLiteralType() + " (*) (");
 		this.writeSelf(codeWriter, false);
 		if(this.item.hasParameter() && ! this.isIncOrDec) {
@@ -265,29 +271,33 @@ public class OperatorWriter {
 			ruleText = ruleText + ", ";
 		}
 		ruleText = ruleText + "cpgf::GMetaRuleExplicitThis";
-		codeWriter.write(", cpgf::MakePolicy<" + ruleText + " >())");
+		codeWriter.write(", cpgf::MakePolicy<" + ruleText + " >()" + ")");
 
 		WriterUtil.writeDefaultParams(codeWriter, this.item.getParameterList());
-		
+
 		if(this.shouldGenerateArraySetter()) {
 			this.doWriteNamedWrapperReflectionCodeForArraySetter(codeWriter, define);
 		}
 	}
-	
+
 	private void doWriteNamedWrapperReflectionCodeForArraySetter(CppWriter codeWriter, String define) {
 		String reflectionName = this.metaInfo.getOperatorNameMap().get(this.item, 2);
 		String methodName = WriterUtil.getOperatorWraperNamePrefix(this.metaInfo, this.item) + reflectionName;
 		if(this.templateDependentParameterList != null) {
 			methodName = methodName + "<"
-				+ Util.getParameterText(this.templateDependentParameterList, false, true)
-				+ ">"
-			;
+					+ Util.getParameterText(this.templateDependentParameterList, false, true)
+					+ ">"
+					;
 		}
 
-		String action = WriterUtil.getReflectionAction(define, "_method");
+		//scturner
+		String action = WriterUtil.getReflectionAction(define, "_methodEx");
 
 		codeWriter.write(action);
 		codeWriter.write("(" + Util.quoteText(reflectionName) + ", ");
+		//scturner
+		codeWriter.write(getTypeList() + ",");
+
 		codeWriter.write("(void (*) (");
 		this.writeSelf(codeWriter, false);
 		codeWriter.write(", ");
@@ -304,9 +314,23 @@ public class OperatorWriter {
 			ruleText = ruleText + ", ";
 		}
 		ruleText = ruleText + "cpgf::GMetaRuleExplicitThis";
-		codeWriter.write(", cpgf::MakePolicy<" + ruleText + " >())");
+		//scturner
+		codeWriter.write(", cpgf::MakePolicy<" + ruleText + " >()" + ")");
 
 		WriterUtil.writeDefaultParams(codeWriter, this.item.getParameterList());
 	}
-	
+
+	//scturner
+	private String getTypeList() {
+		//list of types
+		String types = "\"" + item.getResultType().getLiteralType();
+		for (Parameter p : item.getParameterList()) {
+			types += "," + p.getType().getLiteralType();
+		}                
+
+		types += "\"";
+
+		return types;
+	}
+
 }
