@@ -24,9 +24,8 @@ public class Constructor extends CppInvokable {
 			CppType type = this.getParameterList().get(0).getType();
 			return type.isConstValueReference() && type.getLiteralType().indexOf(this.getOwner().getPrimaryName()) >= 0;
 		}
-		else {
-			return false;
-		}
+		
+		return false;		
 	}
 	
 	public boolean isTypeConverter() {

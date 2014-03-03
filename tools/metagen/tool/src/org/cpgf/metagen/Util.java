@@ -413,7 +413,7 @@ public class Util {
 	
 	private static class RegExpFlags {
 		public boolean replaceAll;
-	};
+	}
 	
 	public static Pattern parseRegExp(String s, RegExpFlags outFlags)
 	{

@@ -8,16 +8,15 @@ import java.util.regex.*;
 import org.cpgf.metagen.*;
 import org.cpgf.metagen.filters.*;
 
-//TODO WARNING - May not work in XP (or earlier) if source code is not in the 
-//current working directory.  Doxygen messes with the paths and switches 
-// \ to /.  Eariler version of Windows do not like it.  Windows 7 seems to be
-// okay with it.
-
-
 // -------------------------------------------------------------------------
 /**
  *  Finds the doxygen executable and uses it to generate xml files for the 
  *  code.
+ *  
+ *  WARNING - May not work in XP (or earlier) if source code is not in the 
+ * current working directory.  Doxygen messes with the paths and switches 
+ * \ to /.  Earlier version of Windows do not like it.  Windows 7 seems to be
+ * okay with it.
  *
  *  @author  scturner
  *  @version Jan 20, 2014
@@ -56,10 +55,20 @@ public class DoxygenCaller
         showExtendedInfo = extInfo;
     }
     
+    // ----------------------------------------------------------
+    /**
+     * Determines if additional information is displayed (i.e. debugging info).
+     * @return true if additional information is being shown
+     */
     public boolean isExtendedInfoOn() {
         return showExtendedInfo;
     }
     
+    // ----------------------------------------------------------
+    /**
+     * Sets if additional information is displayed (i.e. debugging info).
+     * @param extInfo true to show more information
+     */
     public void setExtendedInfo(boolean extInfo) {
         showExtendedInfo = extInfo;
     }
@@ -107,6 +116,8 @@ public class DoxygenCaller
     /**
      * Runs doxygen and returns the location of the output's index file. If
      * an error occurs, the index file is null.
+     * 
+     * @param sourceFiles List of source files to run doxygen on 
      * 
      * @return The index file or null if an error occurred.
      */
@@ -252,6 +263,8 @@ public class DoxygenCaller
                 //do nothing
                 subDir = "linux";
                 break;
+            default:
+                //do nothing
         }
 
 //      check if appropriate executable is found
@@ -364,7 +377,7 @@ public class DoxygenCaller
             outputMsg += "Creating Header Files: " + createHdr + "\n";
             outputMsg += "Exclude pattern: " + exReg + "\n";
         }
-        //TODO fix if so that exScr or exReg
+       
         // |(.*/" 
         //+ createHeaderFilesPrefix + "[^/]*)
         //add filter for fake headers here

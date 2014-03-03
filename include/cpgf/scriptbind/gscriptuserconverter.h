@@ -27,12 +27,18 @@ struct IScriptUserConverter : public IObject
 {
 	virtual uint32_t G_API_CC canConvert(const GScriptUserConverterParamData * paramData) = 0;
 	virtual void G_API_CC convert(GVariantData * outputValue, const GScriptUserConverterParamData * paramData, uint32_t tag) = 0;
+
+public:
+	virtual ~IScriptUserConverter() {}
 };
 
 
 class GScriptUserConverterBase : public IScriptUserConverter
 {
 	G_INTERFACE_IMPL_OBJECT
+
+public:
+	virtual ~GScriptUserConverterBase() {}
 };
 
 

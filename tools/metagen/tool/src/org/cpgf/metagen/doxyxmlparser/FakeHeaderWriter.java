@@ -76,6 +76,7 @@ public class FakeHeaderWriter
      * @param hName New header file name
      * @param sName Source file name
      * @param info Metadata for the source file.
+     * @param cfg Configuration to use
      */
     public FakeHeaderWriter(String hName, String sName, MetaInfo info, 
         Config cfg) {
@@ -668,8 +669,9 @@ public class FakeHeaderWriter
     
     /**
      * Takes the source file and metadata and creates a fake header file.
+     * @throws IOException 
      * 
-     * @exception If the file is invalid or the metadata is invalid.
+     * @throws IOException If the file is invalid or the metadata is invalid.
      */
     public void write() throws IOException {
         if (headerName == null || sourceName == null) {

@@ -3,27 +3,57 @@ package org.cpgf.metagen.filters;
 import java.io.*;
 import java.util.regex.*;
 
+// -------------------------------------------------------------------------
+/**
+ *  Creates a filter that finds c++ blocks (i.e. everything between matching
+ *  { }).
+ *
+ *  @author  Schnook
+ *  @version Feb 28, 2014
+ */
 abstract public class CppBlockFilter extends CppFileFilter
 {
 
+ // ----------------------------------------------------------
+    /**
+     * Creates a filter for a file with a regex
+     * @param file File to filter
+     */
     public CppBlockFilter( File file )
     {
         super( file );
     }
 
 
+ // ----------------------------------------------------------
+    /**
+     * Creates a filter for a file with a regex
+     * @param fileName File to filter
+     */
     public CppBlockFilter( String fileName )
     {
         super( fileName );
     }
 
 
+    // ----------------------------------------------------------
+    /**
+     * Creates a filter for a file with a regex
+     * @param file File to filter
+     * @param filter Regular expression to match the contents
+     */
     public CppBlockFilter( File file, String filter )
     {
         super( file, filter );
     }
 
 
+ // ----------------------------------------------------------
+    /**
+     * Creates a filter for a file with a regex
+     * @param fileName File to filter
+     * @param filter Regular expression to match the contents
+     */
     public CppBlockFilter( String fileName, String filter )
     {
         super( fileName, filter );
@@ -36,6 +66,7 @@ abstract public class CppBlockFilter extends CppFileFilter
      * @param pattern Pattern to find
      * 
      * @return The block (class/function) that matches the pattern 
+     * @throws IOException If the file cannot be accessed
      */
     protected String findPatternBlock(String pattern) throws IOException {
         bufferFile(false); //it would be bad to breakt this into lines
@@ -84,7 +115,9 @@ abstract public class CppBlockFilter extends CppFileFilter
                         if (slashCount % 2 == 0 && !inChar) {
                             inString = !inString;
                         }
-                        break;                    
+                        break;    
+                    default:
+                        //do nothing
                 }
                 
                 if (contents.charAt(i) == '\\') {

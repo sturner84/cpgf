@@ -4,7 +4,21 @@ import org.cpgf.metagen.Config;
 import org.cpgf.metagen.codewriter.CppWriter;
 import org.cpgf.metagen.metadata.CppClass;
 
+// -------------------------------------------------------------------------
+/**
+ *  Writes the main .cpp file for the metadata.  This file registers all of the
+ *  metadata
+ *
+ *  @author  cpgf
+ *  @version Feb 28, 2014
+ */
 public class MainSourceFileWriter extends CodeFileWriter {
+    
+    
+	// ----------------------------------------------------------
+	/**
+	 * @param config Configuration to use
+	 */
 	public MainSourceFileWriter(Config config) {
 		super(config, null, null);
 	}
@@ -40,6 +54,10 @@ public class MainSourceFileWriter extends CodeFileWriter {
 		codeWriter.beginNamespace(this.getConfig().cppNamespace);
 		
 		codeWriter.beginNamespace("");
+		
+		codeWriter.writeLine("//records whether the data has been" +
+				" registered or not.");
+		codeWriter.writeLine("bool registered = false;\n");
 
 		codeWriter.writeLine("G_AUTO_RUN_BEFORE_MAIN()");
 
@@ -62,11 +80,15 @@ public class MainSourceFileWriter extends CodeFileWriter {
 		codeWriter.writeLine("void registerMetaDataToGlobal()");
 		codeWriter.beginBlock();
 
+		codeWriter.writeLine("if (!registered)");
+		codeWriter.beginBlock();
 		CppClass global = new CppClass(null);
 		WriterUtil.defineMetaClass(this.getConfig(), codeWriter, global, "_d", "define");
 
 		codeWriter.writeLine(this.getMainFunctionName() + "(_d);");
-
+		codeWriter.writeLine("registered = true;");
+		codeWriter.endBlock();
+		
 		codeWriter.endBlock();
 		codeWriter.writeLine("");
 		//end scturner

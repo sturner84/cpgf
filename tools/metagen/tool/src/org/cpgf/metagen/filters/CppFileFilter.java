@@ -4,6 +4,16 @@ import java.io.*;
 import java.util.*;
 import java.util.regex.*;
 
+// -------------------------------------------------------------------------
+/**
+ *  Filters the contents of a cpp file.  
+ *  
+ *  Filters the contents of a cpp file. It can remove comments and then
+ *  be used to find particular structures or values. 
+ *
+ *  @author  Schnook
+ *  @version Feb 28, 2014
+ */
 abstract public class CppFileFilter
 {
     /** File to search */
@@ -35,7 +45,7 @@ abstract public class CppFileFilter
      * 
      * This does not throw an error if the file does not exist.
      * 
-     * @param file Name of the file to search
+     * @param fileName Name of the file to search
      */
     public CppFileFilter(String fileName) {
         searchFile = new File(fileName);
@@ -65,7 +75,7 @@ abstract public class CppFileFilter
      * 
      * This does not throw an error if the file does not exist.
      * 
-     * @param file Name of the file to search
+     * @param fileName Name of the file to search
      * @param filter Pattern to apply to the contents of the file before
      *  searching
      */
@@ -80,6 +90,7 @@ abstract public class CppFileFilter
      * 
      * @param byLines Divides the file into lines (if true). Otherwise, it
      *  is read in as a single String
+     * @throws IOException If the file cannot be accessed
      */
     protected void bufferFile(boolean byLines)
                     throws IOException {

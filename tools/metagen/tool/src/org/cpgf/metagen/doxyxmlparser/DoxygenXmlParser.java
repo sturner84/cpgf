@@ -258,9 +258,8 @@ public class DoxygenXmlParser {
 		if(child == null) {
 			return "";
 		}
-		else {
-			return Util.getAttribute(child, "file");
-		}
+		
+		return Util.getAttribute(child, "file");		
 	}
 
 	private EnumVisibility getVisibility(Node node) {

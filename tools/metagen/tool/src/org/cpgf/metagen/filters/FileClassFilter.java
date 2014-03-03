@@ -36,7 +36,7 @@ public class FileClassFilter extends CppBlockFilter
      * 
      * This does not throw an error if the file does not exist.
      * 
-     * @param file Name of the file to search
+     * @param fileName Name of the file to search
      */
     public FileClassFilter(String fileName) {
         super(fileName);
@@ -50,6 +50,7 @@ public class FileClassFilter extends CppBlockFilter
      * @param className The name of the class to find
      *  
      * @return A String with the class definition in it or null.
+     * @throws IOException If the file cannot be accessed
      */
     public String find(String className) throws IOException {
         return findPatternBlock(String.format(CLASS_HEADER, className)) + ";";        

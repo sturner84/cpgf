@@ -7,7 +7,7 @@ public class PredefinedClassTraitsList {
 	private class TraitsItem {
 		public String pattern;
 		public ClassTraits traits;
-	};
+	}
 	
 	private List<TraitsItem> traitsList;
 	

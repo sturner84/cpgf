@@ -15,6 +15,9 @@ import org.mozilla.javascript.NativeObject;
 import org.mozilla.javascript.Scriptable;
 
 
+//TODO the js.jar library is only used for this class
+// to load the configuration file.  Redo this class to avoid the dependency?
+
 public class JavascriptConfigLoader implements IOutputCallback {
 	private static Context context;
 	private static Scriptable scope;
@@ -239,9 +242,8 @@ public class JavascriptConfigLoader implements IOutputCallback {
 			field.set(this.config, value);
 			return true;
 		}
-		else {
-			return false;
-		}
+		
+		return false;		
 	}
 
 }

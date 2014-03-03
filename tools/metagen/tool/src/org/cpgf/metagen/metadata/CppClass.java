@@ -236,15 +236,14 @@ public class CppClass extends ParameteredItem {
 		if(! this.isGlobal()) {
 			return true;
 		}
-		else {
-			return this.constructorList.size() > 0
-					|| this.fieldList.size() > 0
-					|| this.methodList.size() > 0
-					|| this.enumList.size() > 0
-					|| this.operatorList.size() > 0
-					|| this.constantList.size() > 0
-				;
-		}
+		
+		return this.constructorList.size() > 0
+				|| this.fieldList.size() > 0
+				|| this.methodList.size() > 0
+				|| this.enumList.size() > 0
+				|| this.operatorList.size() > 0
+				|| this.constantList.size() > 0
+			;		
 	}
 	
 	@Override
@@ -266,9 +265,8 @@ public class CppClass extends ParameteredItem {
 		if(this.getDestructor() != null && this.getDestructor().getVisibility() != EnumVisibility.Public) {
 			return true;
 		}
-		else {
-			return false;
-		}
+		
+		return false;		
 	}
 
 	private boolean checkDefaultConstructorHidden() {
@@ -290,9 +288,10 @@ public class CppClass extends ParameteredItem {
 		if(hasNonPublicDefaultCtor || (!hasDefaultCtor && hasNonDefaultCtor)) {
 			return true;
 		}
-		else {
-			return false;
-		}
+		
+		return false;
+		
+		
 	}
 	
 	private boolean checkCopyConstructorHidden() {
@@ -325,12 +324,12 @@ public class CppClass extends ParameteredItem {
 		return false;
 	}
 	
-	private void loadTraits(ClassTraits traits) {
-		traits.setAbstract(this.checkAbstract());
-		traits.setDestructorHidden(this.checkDestructorHidden());
-		traits.setDefaultConstructorHidden(this.checkDefaultConstructorHidden());
-		traits.setCopyConstructorHidden(this.checkCopyConstructorHidden());
-		traits.setHasTypeConvertConstructor(this.checkHasTypeConverterConstructor());
+	private void loadTraits(ClassTraits nTraits) {
+	    nTraits.setAbstract(this.checkAbstract());
+	    nTraits.setDestructorHidden(this.checkDestructorHidden());
+	    nTraits.setDefaultConstructorHidden(this.checkDefaultConstructorHidden());
+	    nTraits.setCopyConstructorHidden(this.checkCopyConstructorHidden());
+	    nTraits.setHasTypeConvertConstructor(this.checkHasTypeConverterConstructor());
 	}
 
 	public ClassTraits getTraits() {

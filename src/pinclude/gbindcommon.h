@@ -718,6 +718,9 @@ private:
 
 private:
 	GScopedPointer<ScriptUserConverterListType> scriptUserConverterList;
+
+public:
+	virtual ~GScriptContext() {}
 };
 
 class GBindingContext : public GShareFromThis<GBindingContext>

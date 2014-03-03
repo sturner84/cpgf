@@ -20,9 +20,8 @@ public class EnumValue {
 		if(! n.equals("")) {
 			return n + "::" + this.getName();
 		}
-		else {
-			return this.getName();
-		}
+		
+		return this.getName();
 	}
 
 	public String getValue() {

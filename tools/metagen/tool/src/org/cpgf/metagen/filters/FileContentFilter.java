@@ -22,21 +22,47 @@ import java.util.regex.Matcher;
 public class FileContentFilter extends CppFileFilter
 {
     
+    // ----------------------------------------------------------
+    /**
+     * Creates a filter for a specific file using a regex.
+     * 
+     * @param file File to filter
+     * @param filter Regular expression to filter the file
+     */
     public FileContentFilter( File file, String filter )
     {
         super( file, filter );
     }
 
+    // ----------------------------------------------------------
+    /**
+     * Creates a filter for a specific file.
+     * 
+     * @param file File to filter
+     */
     public FileContentFilter( File file )
     {
         super( file );
     }
-
+ 
+    // ----------------------------------------------------------
+    /**
+     * Creates a filter for a specific file using a regex.
+     * 
+     * @param fileName File to filter
+     * @param filter Regular expression to filter the file
+     */    
     public FileContentFilter( String fileName, String filter )
     {
         super( fileName, filter );
     }
 
+    // ----------------------------------------------------------
+    /**
+     * Creates a filter for a specific file.
+     * 
+     * @param fileName File to filter
+     */    
     public FileContentFilter( String fileName )
     {
         super( fileName );
@@ -96,6 +122,7 @@ public class FileContentFilter extends CppFileFilter
      * @param pattern The pattern to compare against
      *       
      * @return A list of lines that match the pattern.
+     * @throws IOException If the file cannot be accessed
      */
     public List<String> findLines(String pattern) throws IOException {
         bufferFile(true);
@@ -110,6 +137,7 @@ public class FileContentFilter extends CppFileFilter
      * @param pattern The pattern to compare against
      *     
      * @return A list of partial lines that match the pattern.
+     * @throws IOException If the file cannot be accessed
      */
     public List<String> findPartialLines(String pattern) throws IOException {
         bufferFile(true);
@@ -125,6 +153,7 @@ public class FileContentFilter extends CppFileFilter
      * @param pattern The pattern to compare against
      *     
      * @return A list of values that match the pattern.
+     * @throws IOException If the file cannot be accessed
      */
     public List<String> find(String pattern) throws IOException {
         bufferFile(false);

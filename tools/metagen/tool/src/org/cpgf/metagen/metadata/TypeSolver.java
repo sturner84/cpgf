@@ -24,10 +24,10 @@ public class TypeSolver {
 	public ParsedType getParsedType(String literalType) {
 		ParsedType type = null; // this.parsedTypeMap.get(literalType);
 
-		if(type == null) {
-			type = new ParsedType(literalType);
-			this.parsedTypeMap.put(literalType, type);
-		}
+		//if(type == null) {
+		type = new ParsedType(literalType);
+		this.parsedTypeMap.put(literalType, type);
+		//}
 
 		return type;
 	}

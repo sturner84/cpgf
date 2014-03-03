@@ -332,9 +332,9 @@ result = result + "static IScriptFunction * xxx = NULL;\n"; //temp
 		
 		if(cppClass.isTemplate()) {
 //			templateInstanceList = this.metaInfo.findTemplateInstances(cppClass);
-			if(templateInstanceList == null) {
-				return;
-			}
+			//if(templateInstanceList == null) {
+			return;
+			//}
 		}
 		
 		CppWriter codeWriter = new CppWriter();

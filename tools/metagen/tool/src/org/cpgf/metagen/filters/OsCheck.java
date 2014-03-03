@@ -11,16 +11,26 @@ public final class OsCheck {
    * types of Operating Systems
    */
   public enum OSType {
-    Windows, MacOS, Linux, Other
+    /** Windows OS */
+    Windows, 
+    /** Mac OS */
+    MacOS, 
+    /** Linux OS */
+    Linux, 
+    /** (Probably) Unix OS */
+    Other
   }
 
+  /**
+   * Cached value of detectedOS
+   */
   protected static OSType detectedOS;
 
   /**
    * detected the operating system from the os.name System property and cache
    * the result
    * 
-   * @returns - the operating system detected
+   * @return the operating system detected
    */
   public static OSType getOperatingSystemType() {
     if (detectedOS == null) {
