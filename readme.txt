@@ -10,7 +10,7 @@ will not be callable, but the user could determines what is being defined in the
 class.
 
 
-version 0.75 (Modified to match LookingGlass's version)
+version 0.80 (Modified to match LookingGlass's version)
 Updates to metagen
 	Modified how operators are reflected so that they are treated only as 
 		methods
