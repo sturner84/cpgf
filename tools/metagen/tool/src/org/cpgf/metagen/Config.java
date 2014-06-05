@@ -4,27 +4,52 @@ import org.cpgf.metagen.metadata.EnumCategory;
 import org.cpgf.metagen.metadata.PredefinedClassTraitsList;
 import org.cpgf.metagen.metawriter.callback.IOutputCallback;
 
+// -------------------------------------------------------------------------
+/**
+ *  Configuration data for the metagen program
+ *
+ *  @author  Schnook
+ *  @version Mar 4, 2014
+ */
 public class Config {
-	// projectID is used as unique ID for meta build function names.
-	// It must be unique among the meta data.
-	public String projectID = "";
+	/** 
+	 * projectID is used as unique ID for meta build function names.
+	* It must be unique among the meta data.
+	*/
+	public String projectID = "cpptesting";
 
-	// The directory to create .h files in.
-	// The tool will create it and its parent directory if it doesn't yet.
-	public String headerOutput = "./output";
+	/** 
+	 * The directory to create .h files in.
+	* The tool will create it and its parent directory if it doesn't yet.
+	*/
+	public String headerOutput = "./meta";
 
-	// The directory to create .cpp files in
-	// The tool will create it and its parent directory if it doesn't yet.
-	public String sourceOutput = "./output";
+	/** 
+	 * The directory to create .cpp files in
+	* The tool will create it and its parent directory if it doesn't yet.
+	*/
+	public String sourceOutput = "./meta";
 
-	// Specify the visibility of what kind of members to be built meta data.
-	// Usually only allowPublic; otherwise; you can"t compile the meta data.
+	/** 
+	 * Specify the visibility of what kind of members to be built meta data.
+	* Usually only allowPublic; otherwise; you can"t compile the meta data.
+	* 
+	* Reflects public data
+	*/
 	public boolean allowPublic = true;
+	/** 
+	 * Reflects protected data. Generally a bad idea to make this true.
+	 */
 	public boolean allowProtected = false;
+	/** 
+	 * Reflects private data. Generally a bad idea to make this true.
+	 */
 	public boolean allowPrivate = false;
 
-	// Specify the meta data categories that are allowed to generate meta data
-	// NOTE: current you can't change it in Javascript config file.
+	/** 
+	 * Specify the meta data categories that are allowed to generate meta data
+	* NOTE: current you can't change it in Javascript config file.
+	*/
 	public EnumCategory[] allowedMetaData = {
 			EnumCategory.Constructor,
 			EnumCategory.Destructor,
@@ -36,73 +61,127 @@ public class Config {
 			EnumCategory.Operator
 	};
 
-	// Prefix for auto generated functions.
-	// See the meta data for Box2D to see how they are used.
+	/** 
+	 * Prefix for auto generated functions.
+	 * See the meta data for Box2D to see how they are used.
+	 */
 	public String metaClassFunctionPrefix = "buildMetaClass_";
+	/** 
+	 * Prefix for auto generated functions.
+	 * See the meta data for Box2D to see how they are used.
+	 */
 	public String metaClassCreatePrefix = "createMetaClass_";
 
+	/**
+	 * prefix added to projectID to create the main registration function
+	 */
 	public String metaClassMainRegisterPrefix = "registerMain_";
 
-	// Prefix for .h and .cpp files.
-	public String sourceFilePrefix = "meta_";
+	/**
+	 *  Prefix for .h and .cpp files.
+	 */
+	public String sourceFilePrefix = "cpptest_meta_";
 
-	// File name for the main entry source file.
+	/** 
+	 * File name for the main entry source file. 
+	 */
 	public String mainSourceFile = "register_meta";
 
-	// A string for namespace for auto generated C++ code.
-	// Choosing it carefully will avoid namespace clash.
-	// null for no namespace.
-	public String cppNamespace = null;
+	/** 
+	 * A string for namespace for auto generated C++ code.
+	* Choosing it carefully will avoid namespace clash.
+	* null for no namespace.
+	*/
+	public String cppNamespace = "cpptest_meta";
 
-	// A callback called before the items are outputed.
-	// See SFML generator scripts for details.
+	/** 
+	 * A callback called before the items are outputed.
+	* See SFML generator scripts for details.
+	*/
 	public IOutputCallback metaItemCallback = null;
 
-	// Header file extension.
+	/**
+	 *  Header file extension. 
+	 */
 	public String headerExtension = ".h";
 
-	// Source file extension.
+	/**
+	 *  Source file extension.
+	 */
 	public String sourceExtension = ".cpp";
 
-	// A string of C++ code that will be put in front of all header files.
-	// Useful if all header files must include extra headers.
+	/** 
+	 * A string of C++ code that will be put in front of all header files.
+	* Useful if all header files must include extra headers.
+	*/
 	public String headerHeaderCode = null;
 
-	// A string of C++ code that will be put in front of all source files.
-	// Useful if all source files must include extra headers.
+	/** 
+	 * A string of C++ code that will be put in front of all source files.
+	 * Useful if all source files must include extra headers.
+	 */
 	public String sourceHeaderCode = null;
 
 	// See SFML generator.
+	/**
+	 * replaces the headers in the source files
+	 */
 	public String[] sourceHeaderReplacer = null;
 
-	public String[] parameterTypeReplacer = null;
+	/**
+     * replaces parameter types in the  files
+     */
+    public String[] parameterTypeReplacer = null;
 
-	// A string of path that will be put in front of auto generated header.
-	// See Box2D generator.
+	/**
+	 *  A string of path that will be put in front of auto generated header.
+	 *  See Box2D generator.
+	 */
 	public String metaHeaderPath = "";
 
-	// auto register to global
-	// If this property is true, .cpp source files will be generated
-	// so the meta data will be auto registered after linked to the .cpp files.
-	// If this property is false, only header files will be generated
-	// so you need to call the reflect function manually.
+	/** 
+	 * auto register to global
+	* If this property is true, .cpp source files will be generated
+	* so the meta data will be auto registered after linked to the .cpp files.
+	* If this property is false, only header files will be generated
+	* so you need to call the reflect function manually.
+	*/
 	public boolean autoRegisterToGlobal = true;
 
-	// A string of namespace for meta data.
-	// All meta data will be put into the namespace (pseudo class).
-	// null for no namespace.
-	public String metaNamespace = null;
+	/** 
+	 * A string of namespace for meta data.
+	* All meta data will be put into the namespace (pseudo class).
+	* null for no namespace.
+	*/
+	public String metaNamespace = "cpptest";
 
+	/**
+	 * Class traits
+	 */
 	public PredefinedClassTraitsList classTraits = new PredefinedClassTraitsList();
 
+	/**
+	 * List of template instances
+	 */
 	public String[] predefinedTemplateInstances = {};
 
+	/**
+	 * Wraps bit fields. Defaults to true
+	 */
 	public boolean wrapBitField = true;
+	/**
+	 * Wraps operators. Defaults to true
+	 */
 	public boolean wrapOperator = true;
 
-	// Not implemented yet. DON'T set it to true.
+	/**
+	 *  Not implemented yet. DON'T set it to true.
+	 */
 	public boolean wrapCallback = false;
 
+	/**
+	 * Prefix before wrapper functions
+	 */
 	public String scriptClassWrapperPostfix = "Wrapper";
 
 
@@ -120,7 +199,7 @@ public class Config {
 	 *  need to use excludeRegEx to exclude both the source and the newly 
 	 *  created header file too.
 	 */
-	public boolean createHeaderFiles = false;
+	public boolean createHeaderFiles = true;
 
 	/**
 	 * If header files are being generated, this can be used to differentiate
@@ -165,13 +244,13 @@ public class Config {
 
 	/**
 	 * Determines if the main method is copied so that it can be reflected and 
-	 * called.  By default, this is not enabled.
+	 * called.  By default, this is enabled.
 	 * 
 	 * Assumes that createHeaderFiles is true and that main is in a cpp file
 	 * with no associated header file.
 	 * 
 	 */
-	public boolean reflectMain = false;
+	public boolean reflectMain = true;
 
 	/**
 	 * If the main is being reflected, this specifies the name it will be 

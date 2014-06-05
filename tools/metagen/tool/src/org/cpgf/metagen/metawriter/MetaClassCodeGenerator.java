@@ -5,18 +5,17 @@ import java.util.List;
 import org.cpgf.metagen.Config;
 import org.cpgf.metagen.Util;
 import org.cpgf.metagen.codewriter.CppWriter;
-import org.cpgf.metagen.metadata.CppClass;
-import org.cpgf.metagen.metadata.CppField;
-import org.cpgf.metagen.metadata.CppInvokable;
-import org.cpgf.metagen.metadata.DeferClass;
-import org.cpgf.metagen.metadata.Item;
-import org.cpgf.metagen.metadata.MetaInfo;
-import org.cpgf.metagen.metadata.Operator;
-import org.cpgf.metagen.metadata.Parameter;
-import org.cpgf.metagen.metadata.TemplateInstance;
+import org.cpgf.metagen.metadata.*;
 import org.cpgf.metagen.metawriter.callback.OutputCallbackData;
 
 
+// -------------------------------------------------------------------------
+/**
+ *  Generates all of the reflected code for a class.
+ *
+ *  @author  Schnook
+ *  @version May 29, 2014
+ */
 public class MetaClassCodeGenerator {
 	private Config config;
 	private MetaInfo metaInfo;
@@ -30,13 +29,24 @@ public class MetaClassCodeGenerator {
 	private ClassWrapperWriter wrapperWriter;
 		
 	//added scturner
+	/**
+	 * Name for the template variable used in the auto-generated code.
+	 */
 	public static final String TEMPLATE_NAME = "METAGEN_TEMP_VAL";
 
-	public MetaClassCodeGenerator(Config config, MetaInfo metaInfo, CppClass cppClass, String sourceFileName) {
-		this.config = config;
-		this.metaInfo = metaInfo;
-		this.cppClass = cppClass;
-		this.sourceFileName = sourceFileName;
+	// ----------------------------------------------------------
+	/**
+	 * @param nConfig Configuration for this file
+	 * @param nMetaInfo Info about the class
+	 * @param nCppClass Class to reflect
+	 * @param nSourceFileName Name of the source file with the class
+	 */
+	public MetaClassCodeGenerator(Config nConfig, MetaInfo nMetaInfo, 
+	    CppClass nCppClass, String nSourceFileName) {
+		this.config = nConfig;
+		this.metaInfo = nMetaInfo;
+		this.cppClass = nCppClass;
+		this.sourceFileName = nSourceFileName;
 		this.classCode = new MetaClassCode();
 	}
 
@@ -48,21 +58,23 @@ public class MetaClassCodeGenerator {
 		return WriterUtil.createFunctionName(cppClassName, sourceFileName, isGlobal, prefix);
 	}
 
-	private String createFunctionName(CppClass cppClass, String prefix) {
-		return this.createFunctionName(cppClass.getPrimaryName(), cppClass.isGlobal(), prefix);
+	private String createFunctionName(CppClass tCppClass, String prefix) {
+		return this.createFunctionName(tCppClass.getPrimaryName(), tCppClass.isGlobal(), prefix);
 	}
 
-	private void beginMetaFunction(CppWriter codeWriter, String name, CppClass cppClass) {
+	private void beginMetaFunction(CppWriter codeWriter, String name, CppClass tCppClass) {
 		//modified scturner
 		codeWriter.write("template <typename " + TEMPLATE_NAME);
-		if(cppClass.isTemplate()) {
-			for(Parameter param : cppClass.getTemplateParameterList()) {
+		if(tCppClass.isTemplate()) {
+			for(Parameter param : tCppClass.getTemplateParameterList()) {
 				codeWriter.write(", " + param.getType().getLiteralType() + " " + param.getName());
 			}
 		}
 		codeWriter.writeLine(">");
 		//modified scturner
-		codeWriter.writeLine("void " + name + "(const cpgf::GMetaDataConfigFlags & config, " + TEMPLATE_NAME + " _d)");
+		codeWriter.writeLine("void " + name 
+		    + "(const cpgf::GMetaDataConfigFlags & config, " 
+		    + TEMPLATE_NAME + " _d)");
 		codeWriter.beginBlock();
 		codeWriter.writeLine("(void)config; (void)_d; (void)_d;");
 		codeWriter.useNamespace("cpgf");
@@ -74,10 +86,11 @@ public class MetaClassCodeGenerator {
 	}
 	
 	private String appendText(String text, String append) {
-		if(text.length() > 0 && append.length() > 0) {
-			text = text + "\n\n";
+		String newLines = "";
+	    if(text.length() > 0 && append.length() > 0) {
+	        newLines = "\n\n";
 		}
-		return text + append;
+		return text + newLines + append;
 	}
 
 	private String doGenerateCallbackWrapperPrototype(CppInvokable invokable, String name) {
@@ -265,6 +278,24 @@ result = result + "static IScriptFunction * xxx = NULL;\n"; //temp
 		}
 	}
 	
+	
+	private void generateCopyWrapperFunctions(CppClass cls) {
+	    if (CopyFunctionList.getInstance().containsClass(this.cppClass)) {
+
+	        CppWriter codeWriter = new CppWriter();
+
+	        CopyFunctionWriter copyWriter = new CopyFunctionWriter(cls);
+	        copyWriter.writeNamedWrapperFunctionCode(codeWriter);
+
+	        this.classCode.headerCode = this.appendText(classCode.headerCode,
+	            codeWriter.getText());
+
+	        for(DeferClass innerClass : cls.getClassList()) {
+	            generateCopyWrapperFunctions(innerClass.getCppClass());
+	        }
+	    }
+    }
+	
 	private void generateClassReflectionHeaderCode() {
 		CppWriter codeWriter = new CppWriter();
 
@@ -385,11 +416,19 @@ result = result + "static IScriptFunction * xxx = NULL;\n"; //temp
 		
 		this.generateBitfieldsWrapperFunctions(this.cppClass);
 		this.generateOperatorWrapperFunctions(this.cppClass);
+		this.generateCopyWrapperFunctions(this.cppClass); //TODO
+		
 
 		this.generateClassReflectionHeaderCode();
 		this.generateClassReflectionSourceCode();
 	}
 	
+	
+	// ----------------------------------------------------------
+	/**
+	 * Creates the meta code for the entire class.
+	 * @return Meta code for the class
+	 */
 	public MetaClassCode generateClassMetaCode() {
 		this.extraHeaderCodeInClass = "";
 

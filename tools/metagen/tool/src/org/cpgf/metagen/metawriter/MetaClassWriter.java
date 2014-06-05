@@ -20,23 +20,29 @@ public class MetaClassWriter {
 
 	private OutputCallbackData callbackData;
 	
-	public MetaClassWriter(Config config, MetaInfo metaInfo, CppWriter codeWriter, CppClass cppClass) {
+	public MetaClassWriter(Config nConfig, MetaInfo nMetaInfo, 
+	    CppWriter nCodeWriter, CppClass nCppClass) {
 		//modified scturner
-		this.initialize(config, metaInfo, codeWriter, cppClass, "_d", 
+		this.initialize(nConfig, nMetaInfo, nCodeWriter, nCppClass, "_d", 
 				MetaClassCodeGenerator.TEMPLATE_NAME + "::ClassType");
 	}
 
-	public MetaClassWriter(Config config, MetaInfo metaInfo, CppWriter codeWriter, CppClass cppClass, String define, String classType) {
-		this.initialize(config, metaInfo, codeWriter, cppClass, define, classType);
+	public MetaClassWriter(Config nConfig, MetaInfo nMetaInfo, 
+	    CppWriter nCodeWriter, CppClass nCppClass, String nDefine, 
+	    String nClassType) {
+		this.initialize(nConfig, nMetaInfo, nCodeWriter, nCppClass,
+		    nDefine, nClassType);
 	}
 
-	private void initialize(Config config, MetaInfo metaInfo, CppWriter codeWriter, CppClass cppClass, String define, String classType) {
-		this.cppClass = cppClass;
-		this.codeWriter = codeWriter;
-		this.config = config;
-		this.metaInfo = metaInfo;
-		this.define = define;
-		this.classType = classType;
+	private void initialize(Config nConfig, MetaInfo nMetaInfo, 
+        CppWriter nCodeWriter, CppClass nCppClass, String nDefine, 
+        String nClassType) {
+		this.cppClass = nCppClass;
+		this.codeWriter = nCodeWriter;
+		this.config = nConfig;
+		this.metaInfo = nMetaInfo;
+		this.define = nDefine;
+		this.classType = nClassType;
 	}
 	
 	private String getUniqueText()
@@ -44,9 +50,9 @@ public class MetaClassWriter {
 		if(this.cppClass.isGlobal()) {
 			return "" + Util.getUniqueID(null);
 		}
-		else {
-			return "" + Util.getUniqueID(this.cppClass.getLocation() + this.cppClass.getFullQualifiedName());
-		}
+
+		return "" + Util.getUniqueID(this.cppClass.getLocation() 
+		    + this.cppClass.getFullQualifiedName());
 	}
 	
 	private String getScopePrefix() {
@@ -54,16 +60,14 @@ public class MetaClassWriter {
 	}
 	
 	private String getScopePrefix(String prefix) {
-		if(prefix == null) {
-			prefix = "";
-		}
-
 		if(this.cppClass.isGlobal()) {
 			return "";
 		}
-		else {
-			return prefix + this.classType + "::";
-		}
+		if(prefix == null) {
+		    return this.classType + "::";
+        }
+        
+		return prefix + this.classType + "::";		
 	}
 
 	private void doCallback(Item item) {
@@ -105,6 +109,10 @@ public class MetaClassWriter {
 		
 		if(this.allowedMetaData(EnumCategory.Method)) {
 			this.writeMethods();
+			
+			if (CopyFunctionList.getInstance().containsClass(this.cppClass)) {
+			    this.writeCopyMethod(); //TODO
+			}
 		}
 		
 		if(this.allowedMetaData(EnumCategory.Enum)) {
@@ -338,6 +346,13 @@ public class MetaClassWriter {
 		}
 	}
 
+	
+	
+	private void writeCopyMethod() {
+	    CopyFunctionWriter copyWriter = new CopyFunctionWriter(cppClass);
+	    copyWriter.writeNamedWrapperReflectionCode(this.codeWriter, define);
+	}
+	
 	private void writeClasses() {
 		String action = WriterUtil.getReflectionAction(this.define, "_class");
 

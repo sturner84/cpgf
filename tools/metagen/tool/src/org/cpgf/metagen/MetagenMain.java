@@ -11,6 +11,13 @@ import org.cpgf.metagen.metadata.MetaInfo;
 import org.cpgf.metagen.metawriter.MetaWriter;
 //import org.cpgf.metagen.metadata.CppClass;  //scturner
 
+// -------------------------------------------------------------------------
+/**
+ *  Starts metagen and processes the command line
+ *
+ *  @author  scturner
+ *  @version Mar 4, 2014
+ */
 public class MetagenMain {
 	private List<String> xmlFileNameList;
 	private List<String> configFileNameList;
@@ -24,9 +31,9 @@ public class MetagenMain {
 		System.out.println("  megagen [--autoxml] " +
 				"[--src Src1 [Src2 Src3...]]" +
 				" [--xml Xml1 [Xml2 Xml3...]] " +
-				"--config Config1 [Config2 Config3...]");
+				"[--config Config1 [Config2 Config3...]]");
 		System.out.println("Either --autoxml or --xml (or both) is required. " +
-				"--autoxml uses doxygen to creat the needed xml " +
+				"--autoxml uses doxygen to create the needed xml " +
 				"files before generating the metadata.\n" +
 				"--src specifies the source files/folders to " +
 				"search for source files. It defaults to the current directory. " +
@@ -90,9 +97,9 @@ public class MetagenMain {
 			error("No XML file is specified.");
 		}
 
-		if(this.configFileNameList.size() == 0) {
-			error("No config file is specified.");
-		}
+//		if(this.configFileNameList.size() == 0) {
+//			error("No config file is specified.");
+//		}
 		//added by scturner
 		if(this.srcFileNameList.size() == 0 && autoXML) {
 			//default to the current directory
@@ -100,6 +107,13 @@ public class MetagenMain {
 		}
 	}
 
+	
+	// ----------------------------------------------------------
+	/**
+	 * Runs the program
+	 * @param args command line parameters (see usage)
+	 * @throws Exception if a file cannot be read
+	 */
 	public void run(String[] args) throws Exception {
 		this.parseCommandLine(args);
 

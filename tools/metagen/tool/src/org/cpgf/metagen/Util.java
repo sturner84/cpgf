@@ -351,7 +351,7 @@ public class Util {
 		
 		Pattern pattern = Pattern.compile("^.*\\b(\\w+)$");
 		Matcher matcher = pattern.matcher(name);
-		if(matcher.matches()) {
+		if(matcher.matches()) {		   
 			return matcher.group(1);
 		}
 		else {
