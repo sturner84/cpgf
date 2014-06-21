@@ -8,6 +8,8 @@
 
 #include "cpgf/gmetaapi.h"
 
+#include "cpgf/gmetanonreflected.h"
+
 #include <vector>
 
 
@@ -36,15 +38,18 @@ private:
 
 public:
 	template <typename ClassT, typename Policy>
-	GMetaClass(ClassT *, meta_internal::GMetaSuperList * superList, const char * name, void (*metaRegister)(GMetaClass *), const Policy &)
-		:	super(name, createMetaType<ClassT>(), mcatClass),
+	GMetaClass(ClassT *, meta_internal::GMetaSuperList * superList,
+			const char * name, void (*metaRegister)(GMetaClass *),
+			const Policy &, const char * nameSpace)
+		:	super(name, createMetaType<ClassT>(), mcatClass, nameSpace),
 			intialized(false),
 			metaRegister(metaRegister),
 			superList(superList),
 			baseData(new meta_internal::GMetaClassData<ClassT, Policy>()) {
 
 		GASSERT_STATIC(IsClass<ClassT>::Result || (IsSameType<ClassT, void>::Result) || IsFundamental<ClassT>::Result);
-
+		implement = NULL; //removes warning
+		module = NULL;
 		this->initialize();
 	}
 
@@ -97,6 +102,31 @@ public:
 	size_t getClassCount() const;
 	const GMetaClass * getClassAt(size_t index) const;
 
+	/**
+	 * Finds an item by going up the inheritance hierarchy if needed.
+	 * @param name of the item to find
+	 * @outIntance Base class of item?
+	 * @return Item with that name or NULL.
+	 */
+	const GMetaNonReflectedItem * getNonReflectedInHierarchy(const char * name, void ** outInstance) const;
+	/**
+	 * Gets a non-reflected item by name.
+	 * @param name Name of the item
+	 * @return The item matching the name or NULL if there is no match.
+	 */
+	const GMetaNonReflectedItem * getNonReflected(const char * name) const;
+	/**
+	 * Gets the number of non-reflected items
+	 * @return number of non-reflected items
+	 */
+	size_t getNonReflectedCount() const;
+	/**
+	 * Gets a non-reflected item at position index.
+	 * @param index Position to access
+	 * @return non-reflected item at that position or NULL if index is invalid.
+	 */
+	const GMetaNonReflectedItem * getNonReflectedAt(size_t index) const;
+
 	size_t getMetaCount() const;
 	const GMetaItem * getMetaAt(size_t index) const;
 
@@ -114,6 +144,7 @@ public:
 	bool equals(const GMetaClass * other) const;
 
 	const GMetaClass * getBaseClass(size_t baseIndex) const;
+	int getBaseClassModifiers(size_t baseIndex) const;
 	size_t getBaseCount() const;
 
 	const GMetaClass * getDerivedClass(size_t derivedIndex) const;
@@ -135,8 +166,8 @@ public:
 
 public:
 	template <typename ClassType, typename BaseType>
-	void addBaseClass() {
-		GMetaClass * baseClass = const_cast<GMetaClass *>(this->superList->add<ClassType, BaseType>()->getBaseClass());
+	void addBaseClass(int mods) {
+		GMetaClass * baseClass = const_cast<GMetaClass *>(this->superList->add<ClassType, BaseType>(mods)->getBaseClass());
 		if(baseClass != NULL) {
 			baseClass->addDerivedClass(this);
 		}
@@ -151,6 +182,13 @@ public:
 	GMetaOperator * addOperator(GMetaOperator * metaOperator);
 	GMetaEnum * addEnum(GMetaEnum * en);
 	GMetaClass * addClass(const GMetaClass * cls);
+	/**
+	 * Adds a non-reflected item to the class.
+	 *
+	 * @param nr Item to add
+	 * @return The parameter
+	 */
+	GMetaNonReflectedItem * addNonReflected(GMetaNonReflectedItem * nr);
 
 	void extractTo(GMetaClass * master);
 

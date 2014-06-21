@@ -1,7 +1,6 @@
 package org.cpgf.metagen.metadata;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import org.cpgf.metagen.Util;
 
@@ -80,6 +79,7 @@ public class Item {
 	}
 	
 	public void getPolicyRules(List<String> rules) {
+	    //do nothing
 	}
 
 	public EnumCategory getCategory() {
@@ -195,4 +195,22 @@ public class Item {
 	    //do nothing?
 	}
 
+	// ----------------------------------------------------------
+	/**
+	 * Gets a list of modifiers set for this Item
+	 * @return List of EnumModifiers will all of the modifiers for this Item
+	 */
+	public List<EnumModifier> getModifiers() {
+	    LinkedList<EnumModifier> list = new LinkedList<EnumModifier>();
+	    
+	    if (isConst()) {
+	        list.add(EnumModifier.Const);
+	    }
+	    
+	    if (isStatic()) {
+	        list.add(EnumModifier.Static);
+	    }
+	    
+	    return list;
+	}
 }

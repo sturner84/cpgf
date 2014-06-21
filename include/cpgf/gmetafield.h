@@ -17,14 +17,18 @@ private:
 public:
 	template <typename OT, typename FT, typename Policy>
 	//scturner
-	GMetaField(const char * name, FT OT::* field, const Policy &, const char * fieldType = NULL)
-		: super(name, createMetaType<FT>(fieldType), mcatField), baseData(new meta_internal::GMetaFieldDataMember<OT, FT, Policy>(field)) {
+	GMetaField(const char * name, FT OT::* field, const Policy &,
+			const char * fieldType = NULL, const char * nameSpace = NULL)
+		: super(name, createMetaType<FT>(fieldType), mcatField, nameSpace),
+		  baseData(new meta_internal::GMetaFieldDataMember<OT, FT, Policy>(field)) {
 	}
 
 	template <typename FT, typename Policy>
 	//scturner
-	GMetaField(const char * name, FT * field, const Policy &, const char * fieldType = NULL)
-		: super(name, createMetaType<FT>(fieldType), mcatField), baseData(new meta_internal::GMetaFieldDataGlobal<FT, Policy>(field)) {
+	GMetaField(const char * name, FT * field, const Policy &,
+			const char * fieldType = NULL, const char * nameSpace = NULL)
+		: super(name, createMetaType<FT>(fieldType), mcatField, nameSpace),
+		  baseData(new meta_internal::GMetaFieldDataGlobal<FT, Policy>(field)) {
 		this->addModifier(metaModifierStatic);
 	}
 

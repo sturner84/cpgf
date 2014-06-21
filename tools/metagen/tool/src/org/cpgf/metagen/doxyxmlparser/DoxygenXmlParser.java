@@ -21,6 +21,14 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 
+// -------------------------------------------------------------------------
+/**
+ *  Parses the Doxygen XML and creates a set of metadata classes from the 
+ *  data
+ *
+ *  @author  scturner (documented)
+ *  @version Jun 6, 2014
+ */
 public class DoxygenXmlParser {
     private Config config;
     private MetaInfo metaInfo;
@@ -32,6 +40,15 @@ public class DoxygenXmlParser {
     private Stack<CppClass> classStack;
     private List<String> namespaceStack;
 
+    // ----------------------------------------------------------
+    /**
+     * Initializes the parser
+     * 
+     * @param config Configuration file for the program
+     * @param metaInfo High level meta information
+     * @param fileMap Mapping of data to individual files
+     * @param xmlFileName Name of the xml file
+     */
     public DoxygenXmlParser(Config config, MetaInfo metaInfo, FileMap fileMap, String xmlFileName) {
         this.config = config;
         this.metaInfo = metaInfo;
@@ -45,6 +62,12 @@ public class DoxygenXmlParser {
         Util.trace("Parsing " + xmlFileName);
     }
 
+    // ----------------------------------------------------------
+    /**
+     * Starts the parsing process
+     * 
+     * @throws Exception If the file cannot be read
+     */
     public void parseFile() throws Exception {
         DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder xmlBuilder = builderFactory.newDocumentBuilder();
@@ -77,6 +100,7 @@ public class DoxygenXmlParser {
 
     private void enterNamepsace(String namespace) {
         this.namespaceStack.add(namespace);
+        metaInfo.addNamespace(namespaceStack);
     }
 
     private void leaveNamespace() {
@@ -300,6 +324,8 @@ public class DoxygenXmlParser {
             //			else {
             //			}
         }
+        
+        //TODO
     }
 
     private void doParseCompound(Node node) throws Exception {
@@ -343,7 +369,7 @@ public class DoxygenXmlParser {
         try {
             this.doParseBaseClasses(node);
             this.doParseInnerClasses(node);
-            this.doParseAllSectionDef(node, location);
+            this.doParseAllSectionDef(node /*, location*/);
             this.doParseTemplateParams(node, cppClass);
 
             this.resolveNamespace(cppClass);
@@ -356,7 +382,7 @@ public class DoxygenXmlParser {
     private void doParseDefFile(Node node, String location) {
         this.enterClass(null).setLocation(location);
         try {
-            this.doParseAllSectionDef(node, location);
+            this.doParseAllSectionDef(node /*, location*/);
         }
         finally {
             this.leaveClass();
@@ -375,25 +401,28 @@ public class DoxygenXmlParser {
 
     private void doParseBaseClasses(Node node) {
         for(Node child : Util.getChildNodesByName(node, "basecompoundref")) {
-            DeferClass baseClass = new DeferClass(Util.getNodeText(child), this.getVisibility(child));
+            DeferClass baseClass = new DeferClass(Util.getNodeText(child),
+                this.getVisibility(child), 
+                "virtual".equals(Util.getAttribute(child, "virt")));
             this.getCurrentClass().getBaseClassList().add(baseClass);
         }
     }
 
     private void doParseInnerClasses(Node node) {
         for(Node child : Util.getChildNodesByName(node, "innerclass")) {
-            DeferClass baseClass = new DeferClass(Util.getNodeText(child), this.getVisibility(child));
+            DeferClass baseClass = new DeferClass(Util.getNodeText(child),
+                this.getVisibility(child), false);
             this.getCurrentClass().getClassList().add(baseClass);
         }
     }
 
-    private void doParseAllSectionDef(Node node, String location) {
+    private void doParseAllSectionDef(Node node /*, String location*/) {
         for(Node child : Util.getChildNodesByName(node, "sectiondef")) {
-            this.doParseSectionDef(child, location);
+            this.doParseSectionDef(child /*, location*/);
         }
     }
 
-    private void doParseSectionDef(Node node, String location) {
+    private void doParseSectionDef(Node node /*, String location*/) {
         for(Node child : Util.getChildNodesByName(node, "memberdef")) {
             String kind = Util.getAttribute(child, "kind");
             String name = Util.getNodeText(Util.getNode(child, "name"));
@@ -410,7 +439,7 @@ public class DoxygenXmlParser {
                 item = this.doParseEnum(child, name);
             }
             else if(kind.equals("define")) {
-                item = this.doParseConstant(child, name);
+                item = this.doParseConstant(child /*, name*/);
             }
             else if(kind.equals("typedef")) {
                 item = this.doParseTypedef(child, name);
@@ -437,7 +466,7 @@ public class DoxygenXmlParser {
 
                 //scturner scturner added virtual support
                 destructor.setVirtual(Util.getAttribute(node, "virt").equals("virtual"));
-
+                destructor.setInline(Util.isValueYes(Util.getAttribute(node, "inline")));
                 return destructor;
             }
 
@@ -447,6 +476,7 @@ public class DoxygenXmlParser {
                 this.doParseTemplateParams(node, constructor);
                 this.getCurrentClass().getConstructorList().add(constructor);
                 constructor.setExplicit(Util.isValueYes(Util.getAttribute(node, "explicit")));
+                constructor.setInline(Util.isValueYes(Util.getAttribute(node, "inline")));
 
                 return constructor;
             }
@@ -479,6 +509,12 @@ public class DoxygenXmlParser {
 
             operator.setStatic(Util.isValueYes(Util.getAttribute(node, "static")));
             operator.setConst(Util.isValueYes(Util.getAttribute(node, "const")));
+            operator.setVirtual(Util.getAttribute(node, "virt").equals("virtual"));
+            operator.setPureVirtual(Util.getAttribute(node, "virt").equals("pure-virtual"));
+            operator.setInline(Util.isValueYes(Util.getAttribute(node, "inline")));
+            Node defNode = Util.getNode(node, "definition");
+            operator.setExtern(Util.getNodeText( defNode).matches(
+                            "(^\\s*)extern(\\s).*"));
 
             if(operator.getResultType().isEmpty()) { // type convertion operator, T()
                 operator.setResultType(new CppType(this.metaInfo.getTypeSolver(), operator.getOperator()));
@@ -510,6 +546,10 @@ public class DoxygenXmlParser {
         method.setConst(Util.isValueYes(Util.getAttribute(node, "const")));
         method.setVirtual(Util.getAttribute(node, "virt").equals("virtual"));
         method.setPureVirtual(Util.getAttribute(node, "virt").equals("pure-virtual"));
+        method.setInline(Util.isValueYes(Util.getAttribute(node, "inline")));
+        Node defNode = Util.getNode(node, "definition");
+        method.setExtern(Util.getNodeText( defNode).matches(
+                        "(^\\s*)extern(\\s).*"));
 
         this.doParseParams(node, method);
         this.doParseTemplateParams(node, method);
@@ -572,7 +612,8 @@ public class DoxygenXmlParser {
         CppField field = new CppField(name, this.getType(node));
 
         field.setStatic(Util.isValueYes(Util.getAttribute(node, "static")));
-
+        field.setMutable(Util.isValueYes(Util.getAttribute(node, "mutable")));
+        
         //scturner added saturner
         List<Node> initializers = Util.getChildNodesByName(node, "initializer");
         //should only be one
@@ -585,6 +626,10 @@ public class DoxygenXmlParser {
         //		System.out.println(field.getType().getLiteralType() + " " + field.getType().getLiteralType().matches(
         //		    ".*(^|\\s|[*])const($|\\s|&)[^*]*"));
         //end addition
+        field.setVolatile(field.getType().getLiteralType().matches(
+                        ".*(^|\\s|[*])volatile($|\\s|&).*"));
+        field.setExtern(field.getType().getLiteralType().matches(
+                        "(^\\s*)extern(\\s).*"));
 
         Node bitFieldNode = Util.getNode(node, "bitfield");
         if(bitFieldNode != null) {
@@ -609,7 +654,7 @@ public class DoxygenXmlParser {
         return cppEnum;
     }
 
-    private Item doParseConstant(Node node, String name) {
+    private Item doParseConstant(Node node /*, String name*/) {
         if(Util.getNode(node, "param") != null) {
             return null;
         }

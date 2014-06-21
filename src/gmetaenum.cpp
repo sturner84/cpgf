@@ -14,8 +14,8 @@ public:
 };
 
 
-GMetaEnum::GMetaEnum(const char * name, const GMetaType & itemType)
-	: super(name, itemType, mcatEnum), implement(new GMetaEnumDataImplement)
+GMetaEnum::GMetaEnum(const char * name, const GMetaType & itemType, const char * nameSpace)
+	: super(name, itemType, mcatEnum, nameSpace), implement(new GMetaEnumDataImplement)
 {
 	this->addModifier(metaModifierStatic);
 }

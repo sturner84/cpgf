@@ -1,7 +1,6 @@
 package org.cpgf.metagen.metadata;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class CppEnum extends Item {
 	private List<EnumValue> valueList;
@@ -20,4 +19,19 @@ public class CppEnum extends Item {
 		valueList.add(new EnumValue(this, name, value));
 	}
 
+	// ----------------------------------------------------------
+    /**
+     * Gets a list of modifiers set for this Item
+     * @return List of EnumModifiers will all of the modifiers for this Item
+     */
+    @Override
+    public List<EnumModifier> getModifiers() {
+        List<EnumModifier> list =  new LinkedList<EnumModifier>();
+        
+        if (isStatic()) {
+            list.add(EnumModifier.Static);
+        }
+        
+        return list;
+    }
 }

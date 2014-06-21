@@ -1,7 +1,6 @@
 package org.cpgf.metagen.metadata;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class ParameteredItem extends Item {
 	private List<Parameter> parameterList;
@@ -9,6 +8,7 @@ public class ParameteredItem extends Item {
 	private boolean isVirtual;
 	private boolean isPureVirtual;
 	private boolean isTemplate;
+	private boolean isInline;
 
 	public ParameteredItem(EnumCategory category, String name) {
 		super(category, name);
@@ -60,6 +60,15 @@ public class ParameteredItem extends Item {
 	public void setTemplate(boolean isTemplate) {
 		this.isTemplate = isTemplate;
 	}
+	
+	public boolean isInline() {
+        return isInline;
+    }
+
+    public void setInline(boolean isInline) {
+        this.isInline = isInline;
+    }
+
 
 	public int getNonDefaultParameterCount() {
 		int count = 0;
@@ -141,4 +150,33 @@ public class ParameteredItem extends Item {
 		
 		return false;
 	}
+	
+	
+	// ----------------------------------------------------------
+    /**
+     * Gets a list of modifiers set for this Item
+     * @return List of EnumModifiers will all of the modifiers for this Item
+     */
+    @Override
+    public List<EnumModifier> getModifiers() {
+        List<EnumModifier> list = super.getModifiers();
+        
+        if (isVirtual()) {
+            list.add(EnumModifier.Virtual);
+        }
+        
+        if (isPureVirtual()) {
+            list.add(EnumModifier.PureVirtual);
+        }
+        
+        if (isTemplate()) {
+            list.add(EnumModifier.Template);
+        }
+        
+        if (isInline()) {
+            list.add(EnumModifier.Inline);
+        }
+        
+        return list;
+    }
 }

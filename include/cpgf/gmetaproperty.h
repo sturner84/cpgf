@@ -16,8 +16,8 @@ private:
 
 public:
 	template <typename Getter, typename Setter, typename Policy>
-	GMetaProperty(const char * name, const Getter & getter, const Setter & setter, const Policy &)
-		: super(name, meta_internal::createPropertyType<Getter, Setter, Policy>(), mcatProperty), baseData(new meta_internal::GMetaPropertyData<Getter, Setter, Policy>(getter, setter)) {
+	GMetaProperty(const char * name, const Getter & getter, const Setter & setter, const Policy &, const char * nameSpace)
+		: super(name, meta_internal::createPropertyType<Getter, Setter, Policy>(), mcatProperty, nameSpace), baseData(new meta_internal::GMetaPropertyData<Getter, Setter, Policy>(getter, setter)) {
 	}
 
 	virtual bool canGet() const;

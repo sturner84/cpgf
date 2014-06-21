@@ -44,7 +44,7 @@ private:
 	typedef GMetaCallable super;
 
 public:
-	GMetaOperator(meta_internal::GMetaOperatorDataBase * baseData);
+	GMetaOperator(meta_internal::GMetaOperatorDataBase * baseData, const char * nameSpace);
 
 	GMetaOpType getOperator() const;
 

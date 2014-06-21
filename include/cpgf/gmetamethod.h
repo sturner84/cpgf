@@ -22,15 +22,13 @@ private:
 
 public:
 	//scturner
-	//#ifdef G_ADD_TYPE_INFO
 	template <typename OT, typename FT, typename Policy>
-	static GMetaMethod * newMethod(const char * name, const FT & func, const Policy & policy G_ADD_TYPE_INFO_PARAM_LAST) {
-		GMetaMethod * method = new GMetaMethod(name, createMetaType<FT>(), meta_internal::GMetaMethodCallbackMaker<OT, FT>::make(func), policy G_ADD_TYPE_INFO_ACT_PARAM_LAST);
-		//#else
-		//	template <typename OT, typename FT, typename Policy>
-		//	static GMetaMethod * newMethod(const char * name, const FT & func, const Policy & policy) {
-		//		GMetaMethod * method = new GMetaMethod(name, createMetaType<FT>(), meta_internal::GMetaMethodCallbackMaker<OT, FT>::make(func), policy);
-		//#endif
+	static GMetaMethod * newMethod(const char * name, const FT & func,
+			const Policy & policy, const char * paramTypes = NULL,
+			const char * nameSpace = NULL) {
+		GMetaMethod * method = new GMetaMethod(name, createMetaType<FT>(),
+				meta_internal::GMetaMethodCallbackMaker<OT, FT>::make(func),
+				policy, paramTypes, nameSpace);
 		if(! PolicyHasRule<Policy, GMetaRuleExplicitThis>::Result) {
 			method->addModifier(meta_internal::GMetaMethodCallbackMaker<OT, FT>::modifiers);
 		}
@@ -40,17 +38,14 @@ public:
 
 public:
 	//scturner
-	//#ifdef G_ADD_TYPE_INFO
 	template <typename CT, typename Policy>
-	GMetaMethod(const char * name, const GMetaType & itemType, const CT & callback, const Policy & policy G_ADD_TYPE_INFO_PARAM_LAST)
-	: super(name, itemType, mcatMethod), baseData(new meta_internal::GMetaMethodData<CT, Policy>(callback, policy G_ADD_TYPE_INFO_ACT_PARAM_LAST)) {
+	GMetaMethod(const char * name, const GMetaType & itemType,
+			const CT & callback, const Policy & policy,
+			const char * paramTypes = NULL, const char * nameSpace = NULL)
+	: super(name, itemType, mcatMethod, nameSpace),
+	  baseData(new meta_internal::GMetaMethodData<CT, Policy>(callback,
+			  policy, paramTypes)) {
 	}
-	//#else
-	//	template <typename CT, typename Policy>
-	//		GMetaMethod(const char * name, const GMetaType & itemType, const CT & callback, const Policy & policy)
-	//			: super(name, itemType, mcatMethod), baseData(new meta_internal::GMetaMethodData<CT, Policy>(callback, policy)) {
-	//		}
-	//#endif
 
 	virtual GMetaType getParamType(size_t index) const;
 	virtual size_t getParamCount() const;
@@ -96,13 +91,15 @@ private:
 public:
 	template <typename OT, typename Signature, typename Policy>
 	//scturner
-	static GMetaConstructor * newConstructor(const Policy & policy, const char * paramTypes = NULL) {
+	static GMetaConstructor * newConstructor(const Policy & policy,
+			const char * paramTypes = NULL, const char * nameSpace = NULL) {
 		GMetaConstructor * metaConstructor = new GMetaConstructor(
 				GCallback<Signature>(
-					meta_internal::GMetaConstructorInvoker<GFunctionTraits<Signature>::Arity, OT, typename GFunctionTraits<Signature>::ArgList>()
+					meta_internal::GMetaConstructorInvoker<
+					GFunctionTraits<Signature>::Arity, OT,
+					typename GFunctionTraits<Signature>::ArgList>()
 				),
-				policy,
-				paramTypes
+				policy, paramTypes, nameSpace
 			);
 
 		return metaConstructor;
@@ -110,11 +107,12 @@ public:
 
 	template <typename OT, typename FT, typename Policy>
 	//scturner
-	static GMetaConstructor * newConstructor(const FT & func, const Policy & policy, const char * paramTypes = NULL ) {
+	static GMetaConstructor * newConstructor(const FT & func,
+			const Policy & policy, const char * paramTypes = NULL,
+			const char * nameSpace = NULL) {
 		GMetaConstructor * metaConstructor = new GMetaConstructor(
 				meta_internal::GMetaMethodCallbackMaker<OT, FT>::make(func),
-				policy,
-				paramTypes
+				policy, paramTypes, nameSpace
 			);
 
 		return metaConstructor;
@@ -123,9 +121,13 @@ public:
 public:
 	template <typename CT, typename Policy>
 	//scturner
-	GMetaConstructor(const CT & callback, const Policy & policy, const char * paramTypes = NULL)
-		: super(meta_internal::arityToName(CT::TraitsType::Arity).c_str(), createMetaType<typename CT::TraitsType::FullType>(), mcatConstructor),
-		  baseData(new meta_internal::GMetaMethodData<CT, Policy>(callback, policy, paramTypes)) {
+	GMetaConstructor(const CT & callback, const Policy & policy,
+			const char * paramTypes = NULL, const char * nameSpace = NULL)
+		: super(meta_internal::arityToName(CT::TraitsType::Arity).c_str(),
+				createMetaType<typename CT::TraitsType::FullType>(),
+				mcatConstructor, nameSpace),
+		  baseData(new meta_internal::GMetaMethodData<CT, Policy>(callback,
+				  policy, paramTypes)) {
 	}
 
 	virtual GMetaType getParamType(size_t index) const;

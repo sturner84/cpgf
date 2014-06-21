@@ -46,7 +46,10 @@ bool loadCore(GScriptObject * scriptObject, const char * namespaces, const char 
 {
 	GScopedPointer<GMetaCore> core(new GMetaCore(scriptObject));
 
-	GDefineMetaClass<GMetaCore> define = GDefineMetaClass<GMetaCore>::Policy<GMetaPolicyNoDefaultAndCopyConstructor>::declare("GMetaCore");
+	GDefineMetaClass<GMetaCore> define
+		= GDefineMetaClass<GMetaCore>
+			::Policy<GMetaPolicyNoDefaultAndCopyConstructor>
+			::declare("GMetaCore", "", 0, 0);
 	buildMetaData_metaCore(define);
 
 	injectObjectToScript(scriptObject, define.getMetaClass(), core.get(), namespaces);
@@ -59,14 +62,18 @@ bool loadCore(GScriptObject * scriptObject, const char * namespaces, const char 
 	return true;
 }
 
-bool loadByteArray(GScriptObject * scriptObject, const char * namespaces, const char * /*libraryName*/)
+bool loadByteArray(GScriptObject * scriptObject, const char * namespaces,
+		const char * /*libraryName*/)
 {
-	GDefineMetaNamespace ns = GDefineMetaNamespace::declare("");
+	GDefineMetaNamespace ns = GDefineMetaNamespace::declare("", "", 0, {0});
 	
 	ns._method("createByteArray", &createByteArray);
 	ns._method("createByteArray", &createByteArrayWithLength);
 
-	GDefineMetaClass<GMetaByteArray> gbyteArrayDefine = GDefineMetaClass<GMetaByteArray>::Policy<GMetaPolicyNoCopyConstructor>::declare("GMetaByteArray");
+	GDefineMetaClass<GMetaByteArray> gbyteArrayDefine
+		= GDefineMetaClass<GMetaByteArray>
+			::Policy<GMetaPolicyNoCopyConstructor>
+			::declare("GMetaByteArray", "", 0, {0});
 	buildMetaData_metaByteArray(gbyteArrayDefine);
 	ns._class(gbyteArrayDefine);
 	
@@ -77,29 +84,37 @@ bool loadByteArray(GScriptObject * scriptObject, const char * namespaces, const 
 	return true;
 }
 
-bool loadObjectArray(GScriptObject * scriptObject, const char * namespaces, const char * /*libraryName*/)
+bool loadObjectArray(GScriptObject * scriptObject, const char * namespaces,
+		const char * /*libraryName*/)
 {
-	GDefineMetaNamespace ns = GDefineMetaNamespace::declare("");
+	GDefineMetaNamespace ns = GDefineMetaNamespace::declare("", "", 0, {0});
 	
 	ns._method("createObjectArray", &createObjectArray);
 
-	GDefineMetaClass<GMetaObjectArray> gobjectArrayDefine = GDefineMetaClass<GMetaObjectArray>::Policy<GMetaPolicyNoDefaultAndCopyConstructor>::declare("GMetaObjectArray");
+	GDefineMetaClass<GMetaObjectArray> gobjectArrayDefine
+		= GDefineMetaClass<GMetaObjectArray>
+			::Policy<GMetaPolicyNoDefaultAndCopyConstructor>
+			::declare("GMetaObjectArray", "", 0, {0});
 	buildMetaData_metaObjectArray(gobjectArrayDefine);
 	ns._class(gobjectArrayDefine);
 	
-	GScopedInterface<IMetaClass> metaClass(static_cast<IMetaClass *>(metaItemToInterface(ns.takeMetaClass(), true)));
+	GScopedInterface<IMetaClass> metaClass(static_cast<IMetaClass *>(
+			metaItemToInterface(ns.takeMetaClass(), true)));
 	scriptObject->holdObject(metaClass.get());
 	injectObjectToScript(scriptObject, metaClass.get(), NULL, namespaces);
 	
 	return true;
 }
 
-bool loadDebug(GScriptObject * scriptObject, const char * namespaces, const char * /*libraryName*/)
+bool loadDebug(GScriptObject * scriptObject, const char * namespaces,
+		const char * /*libraryName*/)
 {
-	GDefineMetaClass<GMetaDebug> debugDefine = GDefineMetaClass<GMetaDebug>::declare("GMetaDebug");
+	GDefineMetaClass<GMetaDebug> debugDefine
+		= GDefineMetaClass<GMetaDebug>::declare("GMetaDebug", "", 0, {0});
 	buildMetaData_metaDebug(debugDefine);
 	
-	GScopedInterface<IMetaClass> metaClass(static_cast<IMetaClass *>(metaItemToInterface(debugDefine.takeMetaClass(), true)));
+	GScopedInterface<IMetaClass> metaClass(static_cast<IMetaClass *>(
+			metaItemToInterface(debugDefine.takeMetaClass(), true)));
 	scriptObject->holdObject(metaClass.get());
 	injectObjectToScript(scriptObject, metaClass.get(), NULL, namespaces);
 	

@@ -7,15 +7,7 @@ import org.cpgf.metagen.Config;
 import org.cpgf.metagen.Util;
 import org.cpgf.metagen.codewriter.CodeWriter;
 import org.cpgf.metagen.codewriter.CppWriter;
-import org.cpgf.metagen.metadata.CppClass;
-import org.cpgf.metagen.metadata.CppField;
-import org.cpgf.metagen.metadata.CppInvokable;
-import org.cpgf.metagen.metadata.CppMethod;
-import org.cpgf.metagen.metadata.Item;
-import org.cpgf.metagen.metadata.MetaInfo;
-import org.cpgf.metagen.metadata.Operator;
-import org.cpgf.metagen.metadata.Parameter;
-import org.cpgf.metagen.metadata.TemplateInstance;
+import org.cpgf.metagen.metadata.*;
 
 
 public class WriterUtil {
@@ -58,7 +50,15 @@ public class WriterUtil {
 
 		if(cppClass.isGlobal()) {
 			if(config.metaNamespace != null) {
-				codeWriter.writeLine("GDefineMetaNamespace " + varName + " = GDefineMetaNamespace::" + action + "(" + namespace + ");");
+			    codeWriter.writeLine(createBaseClassModArray(
+                    cppClass.getBaseClassList(), "baseModifiers"));
+			    
+				codeWriter.writeLine("GDefineMetaNamespace " + varName 
+				    + " = GDefineMetaNamespace::" + action + "(" 
+				    + namespace  + ", \"" + cppClass.getFullNamespace() 
+				    + "\", " + EnumModifier.modifersToCpgfString(
+                        EnumItemType.CLASS, cppClass.getModifiers()) 
+				    + ", baseModifiers);");
 			}
 			else {
 				codeWriter.writeLine("GDefineMetaGlobal " + varName + ";");
@@ -75,11 +75,20 @@ public class WriterUtil {
 
 			typeName = typeName + ">";
 			String policy = "";
-			if(rules != null && rules.size() > 0) {
+			if(rules.size() > 0) {
 				policy = "::Policy<MakePolicy<" + Util.joinStringList(", ", rules) + "> >";
 			}
-
-			codeWriter.writeLine(typeName +  " " + varName + " = " + typeName + policy + "::" + action + "(\"" + cppClass.getPrimaryName() + "\");");
+//TODO done?
+			codeWriter.writeLine(createBaseClassModArray(
+			        cppClass.getBaseClassList(), "baseModifiers"));
+			
+			codeWriter.writeLine(typeName +  " " + varName + " = " 
+			                + typeName + policy + "::" + action 
+			                + "(\"" + cppClass.getPrimaryName() + "\""
+			                + ", \"" + cppClass.getFullNamespace() + "\""
+			                + ", " + EnumModifier.modifersToCpgfString(
+                                EnumItemType.CLASS, cppClass.getModifiers())
+			                + ", baseModifiers);");
 		}
 	}
 
@@ -118,8 +127,17 @@ public class WriterUtil {
 					String typeName = "GDefineMetaClass<" + templateInstance.getFullType();
 					typeName = typeName + Util.generateBaseClassList(cppClass, templateInstance);
 					typeName = typeName + " >";
-
-					codeWriter.writeLine(typeName +  " _nd = " + typeName + policy + "::declare(\"" + normalizeClassName(templateInstance.getMapName()) + "\");");
+//TODO done?
+					codeWriter.writeLine(createBaseClassModArray(
+	                    cppClass.getBaseClassList(), "baseModifiers"));
+	            
+					codeWriter.writeLine(typeName +  " _nd = " + typeName 
+					    + policy + "::declare(\"" + normalizeClassName(
+					        templateInstance.getMapName()) + "\", \"" +
+                            cppClass.getFullNamespace() + "\""
+                             + ", " + EnumModifier.modifersToCpgfString(
+                                EnumItemType.CLASS, cppClass.getModifiers())
+                            + ", baseModifiers);");
 
 					codeWriter.writeLine(callFunc + "<" + typeName + ", " + templateInstance.getTemplateType() + " >(0, _nd);");
 					codeWriter.writeLine("_d._class(_nd);");
@@ -129,11 +147,22 @@ public class WriterUtil {
 			}
 			else {
 				codeWriter.beginBlock();
-
+//TODO
 				String typeName = "GDefineMetaClass<" + cppClass.getLiteralName();
 				typeName = typeName + Util.generateBaseClassList(cppClass);
 				typeName = typeName + ">";
-				codeWriter.writeLine(typeName +  " _nd = " + typeName + policy + "::declare(\"" + cppClass.getPrimaryName() + "\");");
+				
+				codeWriter.writeLine(createBaseClassModArray(
+                    cppClass.getBaseClassList(), "baseModifiers"));
+            
+				
+				codeWriter.writeLine(typeName +  " _nd = " + typeName 
+				    + policy + "::declare(\"" 
+				                + cppClass.getPrimaryName() + "\", \"" +
+				                cppClass.getFullNamespace() + "\""
+				                + ", " + EnumModifier.modifersToCpgfString(
+                                EnumItemType.CLASS, cppClass.getModifiers())
+				                + ", baseModifiers);");
 
 				codeWriter.writeLine(callFunc + "(0, _nd);");
 				codeWriter.writeLine("_d._class(_nd);");
@@ -224,14 +253,20 @@ public class WriterUtil {
 	}
 
 	public static String getReflectionAction(String define, String name) {
-		return define + ".CPGF_MD_TEMPLATE " + name;
+		if (name.endsWith("NR")) {
+		    return define + "." + name;
+		}
+	    return define + ".CPGF_MD_TEMPLATE " + name;
+	    
 	}
 
 	public static String getMethodSuperName(CppMethod method) {
 		return "super_" + method.getPrimaryName();
 	}
 
-	public static void reflectMethod(CppWriter codeWriter, String define, String scopePrefix, CppInvokable method, String reflectName, String methodName, boolean usePrototype) {
+	public static void reflectMethod(CppWriter codeWriter, String define, 
+	    String scopePrefix, CppInvokable method, String reflectName, 
+	    String methodName, boolean usePrototype) {
 		//scturner
 		String action = getReflectionAction(define, "_methodEx");
 
@@ -239,7 +274,10 @@ public class WriterUtil {
 		codeWriter.write("(" + Util.quoteText(reflectName) + ", ");
 		//scturner
 		codeWriter.write(getTypeList(method) + ", ");
-
+		codeWriter.write(Util.quoteText(method.getFullNamespace()) + ", ");
+		codeWriter.write(EnumModifier.modifersToCpgfString(
+            EnumItemType.METHOD, method.getModifiers()) + ", ");
+        
 
 		if(usePrototype) {
 			String typePrefix = scopePrefix;
@@ -295,6 +333,19 @@ public class WriterUtil {
 		return prefix + className;
 	}
 
+	/**
+	 * Formats the #include values.  
+	 * 
+	 * Changes \ to / and replaces headers based on the sourceHeaderReplacer
+	 * config option
+	 * 
+	 * @param config Configuration for the program
+	 * @param sourceFileName Name of the include
+	 * @return The modified include name
+	 * @throws Exception If replacement cannot happen
+	 * 
+	 *  
+	 */
 	public static String formatSourceIncludeHeader(Config config, String sourceFileName) throws Exception {
 		String fileName = sourceFileName;
 		if(config.sourceHeaderReplacer != null) {
@@ -304,5 +355,58 @@ public class WriterUtil {
 
 		return fileName;
 	}
+	
+	
+	// ----------------------------------------------------------
+	/**
+	 * Creates an array of modifiers that describe the base classes in the list
+	 * baseClasses.  
+	 * 
+	 * @param baseClasses List of base classes
+	 * @param arrayName The name of the array in the code generated by this 
+	 * method
+	 * @return A c++ array of ints with the modifiers of the base classes.
+	 */
+	public static String createBaseClassModArray(List<DeferClass> baseClasses, 
+	    String arrayName) {
+	    String arrayStr = "";
+	    String name = arrayName;
+	    int baseCount = 0;
+	    
+	    if (name == null) {
+	        name = "mods";
+	    }
+	    
+	    arrayStr = "int " + name + "[] = ";
+
+	    arrayStr += "{ ";
+	    if (baseClasses != null) {
+	        for (int i = 0; i < baseClasses.size(); i++) {
+	            DeferClass dc = baseClasses.get(i);
+
+	            if (dc.getVisibility() == EnumVisibility.Public
+	                            && dc.getCppClass() != null) {
+
+	                if (baseCount != 0) {
+	                    arrayStr += ", ";
+	                }
+	                arrayStr += EnumModifier.modifersToCpgfString(
+	                    EnumItemType.BASECLASS, dc.getModifiers());
+
+	                baseCount++;
+	            }
+	        }
+	    }
+
+	    if (baseCount == 0) {
+	        arrayStr += "metaModifierNone"; 
+	    }
+	    	    
+	    arrayStr += " };";
+	                    
+	    return arrayStr;
+	}
+	
+	
 
 }

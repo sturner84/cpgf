@@ -23,10 +23,12 @@ namespace cpgf {
 namespace meta_internal {
 
 
-#define CASE_SUPERLIST_ARG(N, unused) case N: superList->add<ClassType, typename TypeList_GetWithDefault<TList, N, void>::Result>(); break;
+#define CASE_SUPERLIST_ARG(N, ARRAY) case N: \
+	superList->add<ClassType, typename TypeList_GetWithDefault<TList, N, void>::Result>( ARRAY [ N ] ); \
+	break;
 
 template <typename TList, typename ClassType>
-GMetaSuperList * doMakeSuperList() {
+GMetaSuperList * doMakeSuperList(int modifiers[]) {
 	GMetaSuperList * superList = new GMetaSuperList;
 
 	for(int i = 0; i < MAX_BASE_COUNT; ++i) {
@@ -35,10 +37,10 @@ GMetaSuperList * doMakeSuperList() {
 		}
 
 		switch(i) {
-			GPP_REPEAT(19, CASE_SUPERLIST_ARG, GPP_EMPTY())
+		GPP_REPEAT(19, CASE_SUPERLIST_ARG, modifiers)
 
-			default:
-				break;
+		default:
+			break;
 		}
 	}
 
@@ -145,6 +147,17 @@ public:
 
 };
 
+
+template <typename BaseType>
+class GDefineMetaNonReflected : public BaseType
+{
+public:
+	GDefineMetaNonReflected(meta_internal::GSharedMetaClass metaClass,
+			GMetaNonReflectedItem * item) : BaseType(metaClass, item) {
+	}
+
+};
+
 template <typename BaseType>
 class GDefineMetaProperty : public BaseType
 {
@@ -185,11 +198,11 @@ class GDefineMetaInfo
 {
 public:
 	explicit GDefineMetaInfo(meta_internal::GSharedMetaClass metaClass, bool dangling)
-		: metaClass(metaClass), dangling(dangling) {
+	: metaClass(metaClass), dangling(dangling) {
 	}
 
 	GDefineMetaInfo(const GDefineMetaInfo & other)
-		: metaClass(other.metaClass), dangling(other.dangling) {
+	: metaClass(other.metaClass), dangling(other.dangling) {
 	}
 
 	GDefineMetaInfo & operator = (const GDefineMetaInfo & other) {
@@ -231,11 +244,11 @@ private:
 
 public:
 	GDefineMetaCommon(meta_internal::GSharedMetaClass metaClass, GMetaItem * currentItem)
-		: metaClass(metaClass), dangling(false), currentItem(currentItem) {
+: metaClass(metaClass), dangling(false), currentItem(currentItem) {
 	}
 
 	GDefineMetaCommon(const GDefineMetaCommon & other)
-		: metaClass(other.metaClass), dangling(other.dangling), currentItem(other.currentItem) {
+	: metaClass(other.metaClass), dangling(other.dangling), currentItem(other.currentItem) {
 	}
 
 	GDefineMetaCommon operator = (const GDefineMetaCommon & other) {
@@ -249,35 +262,50 @@ public:
 	template <typename FT>
 	GDefineMetaMethod<DerivedType> _method(const char * name, FT func) {
 		return GDefineMetaMethod<DerivedType>(
-			this->metaClass,
-			this->metaClass->addMethod(GMetaMethod::newMethod<ClassType>(name, func, GMetaPolicyDefault()))
+				this->metaClass,
+				this->metaClass->addMethod(GMetaMethod::newMethod<ClassType>(
+						name, func, GMetaPolicyDefault()))
 		);
 	}
 
 	template <typename FT, typename Policy>
 	GDefineMetaMethod<DerivedType> _method(const char * name, FT func, const Policy & policy) {
 		return GDefineMetaMethod<DerivedType>(
-			this->metaClass,
-			this->metaClass->addMethod(GMetaMethod::newMethod<ClassType>(name, func, policy))
+				this->metaClass,
+				this->metaClass->addMethod(GMetaMethod::newMethod<ClassType>(
+						name, func, policy))
 		);
 	}
-	
+
 
 	//scturner added type signature
 	template <typename FT>
-	GDefineMetaMethod<DerivedType> _methodEx(const char * name, const char * paramTypes, FT func) {
+	GDefineMetaMethod<DerivedType> _methodEx(const char * name,
+			const char * paramTypes, const char * nameSpace, int modifiers,
+			FT func) {
+
+		GMetaMethod * method = GMetaMethod::newMethod<ClassType>(
+				name, func, GMetaPolicyDefault(), paramTypes, nameSpace);
+		method->addModifier(modifiers);
 		return GDefineMetaMethod<DerivedType>(
 				this->metaClass,
-				this->metaClass->addMethod(GMetaMethod::newMethod<ClassType>(name, func, GMetaPolicyDefault() G_ADD_TYPE_INFO_ACT_PARAM_LAST))
+				this->metaClass->addMethod(method)
 		);
 	}
 
 	//scturner added type signature
 	template <typename FT, typename Policy>
-	GDefineMetaMethod<DerivedType> _methodEx(const char * name, const char * paramTypes, FT func, const Policy & policy) {
+	GDefineMetaMethod<DerivedType> _methodEx(const char * name,
+			const char * paramTypes, const char * nameSpace, int modifiers,
+			FT func, const Policy & policy) {
+
+		GMetaMethod * method = GMetaMethod::newMethod<ClassType>(
+						name, func, policy, paramTypes, nameSpace);
+		method->addModifier(modifiers);
+
 		return GDefineMetaMethod<DerivedType>(
 				this->metaClass,
-				this->metaClass->addMethod(GMetaMethod::newMethod<ClassType>(name, func, policy G_ADD_TYPE_INFO_ACT_PARAM_LAST))
+				this->metaClass->addMethod(method)
 		);
 	}
 
@@ -286,74 +314,94 @@ public:
 	template <typename FT>
 	GDefineMetaField<DerivedType> _field(const char * name, FT field) {
 		return GDefineMetaField<DerivedType>(
-			this->metaClass,
-			//scturner
-			this->metaClass->addField(new GMetaField(name, field, GMetaPolicyDefault(), NULL))
+				this->metaClass,
+				//scturner
+				this->metaClass->addField(new GMetaField(name, field, GMetaPolicyDefault(), NULL))
 		);
 	}
 
 	template <typename FT, typename Policy>
 	GDefineMetaField<DerivedType> _field(const char * name, FT field, const Policy & policy) {
 		return GDefineMetaField<DerivedType>(
-			this->metaClass,
-			//scturner
-			this->metaClass->addField(new GMetaField(name, field, policy, NULL))
+				this->metaClass,
+				//scturner
+				this->metaClass->addField(new GMetaField(name, field, policy, NULL))
 		);
 	}
 
 
 	//scturner added type signature
 	template <typename FT>
-	GDefineMetaField<DerivedType> _fieldEx(const char * name, const char * paramTypes, FT field) {
+	GDefineMetaField<DerivedType> _fieldEx(const char * name,
+			const char * paramTypes, const char * nameSpace, int modifiers,
+			FT field) {
+		GMetaField * gmField = new GMetaField(name, field,
+				GMetaPolicyDefault(), paramTypes, nameSpace);
+		gmField->addModifier(modifiers);
 		return GDefineMetaField<DerivedType>(
 				this->metaClass,
-				this->metaClass->addField(new GMetaField(name, field, GMetaPolicyDefault() G_ADD_TYPE_INFO_ACT_PARAM_LAST))
+				this->metaClass->addField(gmField)
 		);
 	}
 	//scturner added type signature
 	template <typename FT, typename Policy>
-	GDefineMetaField<DerivedType> _fieldEx(const char * name, const char * paramTypes, FT field, const Policy & policy) {
+	GDefineMetaField<DerivedType> _fieldEx(const char * name,
+			const char * paramTypes, const char * nameSpace, int modifiers,
+			FT field, const Policy & policy) {
+		GMetaField * gmField = new GMetaField(name, field,
+				policy, paramTypes, nameSpace);
+		gmField->addModifier(modifiers);
 		return GDefineMetaField<DerivedType>(
 				this->metaClass,
-				this->metaClass->addField(new GMetaField(name, field, policy G_ADD_TYPE_INFO_ACT_PARAM_LAST))
+				this->metaClass->addField(gmField)
 		);
 	}
 
 
 
 	template <typename Getter, typename Setter>
-	GDefineMetaProperty<DerivedType> _property(const char * name, const Getter & getter, const Setter & setter) {
+	GDefineMetaProperty<DerivedType> _property(const char * name,
+			const Getter & getter, const Setter & setter) {
 		return GDefineMetaProperty<DerivedType>(
-			this->metaClass,
-			this->metaClass->addProperty(new GMetaProperty(name, getter, setter, GMetaPolicyDefault()))
+				this->metaClass,
+				this->metaClass->addProperty(new GMetaProperty(name, getter, setter,
+						GMetaPolicyDefault(), ""))
 		);
 	}
 
 	template <typename Getter, typename Setter, typename Policy>
-	GDefineMetaProperty<DerivedType> _property(const char * name, const Getter & getter, const Setter & setter, const Policy & policy) {
+	GDefineMetaProperty<DerivedType> _property(const char * name,
+			const Getter & getter, const Setter & setter, const Policy & policy) {
 		return GDefineMetaProperty<DerivedType>(
-			this->metaClass,
-			this->metaClass->addProperty(new GMetaProperty(name, getter, setter, policy))
+				this->metaClass,
+				this->metaClass->addProperty(new GMetaProperty(name, getter,
+						setter, policy, ""))
 		);
 	}
 
 
 
-	//TODO finish this
+	//supported yet?
 	//scturner added type signature
 	template <typename Getter, typename Setter>
-	GDefineMetaProperty<DerivedType> _propertyEx(const char * name, const char * paramType, const Getter & getter, const Setter & setter) {
+	GDefineMetaProperty<DerivedType> _propertyEx(const char * name,
+			const char * paramType, const char * nameSpace, int modifiers,
+			const Getter & getter, const Setter & setter) {
 		return GDefineMetaProperty<DerivedType>(
 				this->metaClass,
-				this->metaClass->addProperty(new GMetaProperty(name, getter, setter, GMetaPolicyDefault()))
+				this->metaClass->addProperty(new GMetaProperty(name,
+						getter, setter, GMetaPolicyDefault()))
 		);
 	}
 	//scturner added type signature
 	template <typename Getter, typename Setter, typename Policy>
-	GDefineMetaProperty<DerivedType> _propertyEx(const char * name, const char * paramType, const Getter & getter, const Setter & setter, const Policy & policy) {
+	GDefineMetaProperty<DerivedType> _propertyEx(const char * name,
+			const char * paramType, const char * nameSpace, int modifiers,
+			const Getter & getter, const Setter & setter, const Policy & policy) {
 		return GDefineMetaProperty<DerivedType>(
 				this->metaClass,
-				this->metaClass->addProperty(new GMetaProperty(name, getter, setter, policy))
+				this->metaClass->addProperty(new GMetaProperty(name,
+						getter, setter, policy))
 		);
 	}
 
@@ -362,44 +410,60 @@ public:
 	template <typename FT, typename Creator>
 	GDefineMetaOperator<DerivedType> _operator(const Creator & creator) {
 		return GDefineMetaOperator<DerivedType>(
-			this->metaClass,
-			this->metaClass->addOperator(new GMetaOperator(creator.template create<ClassType, FT>(GMetaPolicyDefault())))
+				this->metaClass,
+				this->metaClass->addOperator(new GMetaOperator(creator.template create<ClassType, FT>(GMetaPolicyDefault())))
 		);
 	}
 
 	template <typename FT, typename Creator, typename Policy>
 	GDefineMetaOperator<DerivedType> _operator(const Creator & creator, const Policy & policy) {
 		return GDefineMetaOperator<DerivedType>(
-			this->metaClass,
-			this->metaClass->addOperator(new GMetaOperator(creator.template create<ClassType, FT>(policy)))
+				this->metaClass,
+				this->metaClass->addOperator(new GMetaOperator(creator.template create<ClassType, FT>(policy)))
 		);
 	}
 
 
 	//scturner added type signature
 	template <typename FT, typename Creator>
-	GDefineMetaOperator<DerivedType> _operatorEx(const char * paramTypes, const Creator & creator) {
+	GDefineMetaOperator<DerivedType> _operatorEx(const char * paramTypes,
+			const char * nameSpace, int modifiers, const Creator & creator) {
+		GMetaOperator * gmOperator = new GMetaOperator(
+				creator.template create<ClassType, FT>(GMetaPolicyDefault(),
+						paramTypes, nameSpace));
+		gmOperator->addModifier(modifiers);
 		return GDefineMetaOperator<DerivedType>(
 				this->metaClass,
-				this->metaClass->addOperator(new GMetaOperator(creator.template create<ClassType, FT>(GMetaPolicyDefault() G_ADD_TYPE_INFO_ACT_PARAM_LAST)))
+				this->metaClass->addOperator(gmOperator)
 		);
 	}
+
 	//scturner added type signature
 	template <typename FT, typename Creator, typename Policy>
-	GDefineMetaOperator<DerivedType> _operatorEx(const char * paramTypes, const Creator & creator, const Policy & policy) {
+	GDefineMetaOperator<DerivedType> _operatorEx(const char * paramTypes,
+			const char * nameSpace, int modifiers, const Creator & creator,
+			const Policy & policy) {
+		GMetaOperator * gmOperator = new GMetaOperator(
+				creator.template create<ClassType, FT>(policy,
+						paramTypes, nameSpace));
+		gmOperator->addModifier(modifiers);
 		return GDefineMetaOperator<DerivedType>(
 				this->metaClass,
-				this->metaClass->addOperator(new GMetaOperator(creator.template create<ClassType, FT>(policy G_ADD_TYPE_INFO_ACT_PARAM_LAST)))
+				this->metaClass->addOperator(gmOperator)
 		);
 	}
 
 
 
 	template <typename T>
-	GDefineMetaEnum<DerivedType> _enum(const char * name) {
+	GDefineMetaEnum<DerivedType> _enum(const char * name,
+			const char * nameSpace, int modifiers) {
+		GMetaEnum * gmEnum = new GMetaEnum(name,
+				createMetaType<T>(), nameSpace);
+		gmEnum->addModifier(modifiers);
 		return GDefineMetaEnum<DerivedType>(
-			this->metaClass,
-			this->metaClass->addEnum(new GMetaEnum(name, createMetaType<T>()))
+				this->metaClass,
+				this->metaClass->addEnum(gmEnum)
 		);
 	}
 
@@ -412,24 +476,150 @@ public:
 		if(metaInfo.isDangle()) {
 			metaInfo.getMetaClass()->extractTo(this->metaClass.get());
 			return GDefineMetaInnerClass<DerivedType>(
-				this->metaClass,
-				this->metaClass.get()
+					this->metaClass,
+					this->metaClass.get()
 			);
 		}
 		else {
 			return GDefineMetaInnerClass<DerivedType>(
-				this->metaClass,
-				this->metaClass->addClass(metaInfo.takeMetaClass())
+					this->metaClass,
+					this->metaClass->addClass(metaInfo.takeMetaClass())
 			);
 		}
 	}
 
-	GDefineMetaAnnotation<DerivedType> _annotation(const char * name) {
+	GDefineMetaAnnotation<DerivedType> _annotation(const char * name, const char * nameSpace) {
 		return GDefineMetaAnnotation<DerivedType>(
-			this->metaClass,
-			this->currentItem->addItemAnnotation(new GMetaAnnotation(name))
+				this->metaClass,
+				this->currentItem->addItemAnnotation(new GMetaAnnotation(name, nameSpace))
 		);
 	}
+
+
+
+	//scturner added type signature
+	/**
+	 * Creates a non-reflected field in the class.
+	 *
+	 * @param name Name of the field (i.e. x)
+	 * @param signature Signature of the field (i.e. int x)
+	 * @param vis Visibility of the item (one of mPrivate = 1, mProtected = 2,
+	 *	 mPublic = 4)
+	 * @param nameSpace namespace this item is in
+	 */
+	GDefineMetaNonReflected<DerivedType> _fieldNR(const char * name,
+			const char * signature, GMetaVisibility vis, const char * nameSpace,
+			int modifiers) {
+		GMetaNonReflectedItem * nrItem = new GMetaNonReflectedItem(
+								name, mcatField, vis, signature, nameSpace);
+		nrItem->addModifier(modifiers);
+		return GDefineMetaNonReflected<DerivedType>(
+				this->metaClass,
+				this->metaClass->addNonReflected(nrItem)
+		);
+	}
+
+
+	/**
+	 * Creates a non-reflected method in the class.
+	 *
+	 * @param name Name of the field (i.e. foo)
+	 * @param signature Signature of the field (i.e. int foo(double))
+	 * @param vis Visibility of the item (one of mPrivate = 1, mProtected = 2,
+	 *	 mPublic = 4)
+	 * @param nameSpace namespace this item is in
+	 */
+	GDefineMetaNonReflected<DerivedType> _methodNR(const char * name,
+			const char * signature, GMetaVisibility vis, const char * nameSpace,
+			int modifiers) {
+		GMetaNonReflectedItem * nrItem = new GMetaNonReflectedItem(
+				name, mcatMethod, vis, signature, nameSpace);
+		nrItem->addModifier(modifiers);
+		return GDefineMetaNonReflected<DerivedType>(
+				this->metaClass,
+				this->metaClass->addNonReflected(nrItem)
+		);
+	}
+
+
+	/**
+	 * Creates a non-reflected property in the class.
+	 *
+	 * @param name Name of the property
+	 * @param signature Signature of the property
+	 * @param vis Visibility of the item (one of mPrivate = 1, mProtected = 2,
+	 *	 mPublic = 4)
+	 * @param nameSpace namespace this item is in
+	 */
+	GDefineMetaNonReflected<DerivedType> _propertyNR(const char * name,
+			const char * signature, GMetaVisibility vis, const char * nameSpace,
+			int modifiers) {
+		GMetaNonReflectedItem * nrItem = new GMetaNonReflectedItem(
+				name, mcatProperty, vis, signature, nameSpace);
+		nrItem->addModifier(modifiers);
+
+		return GDefineMetaNonReflected<DerivedType>(
+				this->metaClass,
+				this->metaClass->addNonReflected(nrItem)
+		);
+	}
+
+
+	/**
+	 * Creates a non-reflected enum in the class.
+	 *
+	 * @param name Name of the enum (i.e. myEnum)
+	 * @param signature Signature of the enum (i.e. myEnum {first, second = 4, third})
+	 * @param vis Visibility of the item (one of mPrivate = 1, mProtected = 2,
+	 *	 mPublic = 4)
+	 * @param nameSpace namespace this item is in
+	 */
+	GDefineMetaNonReflected<DerivedType> _enumNR(const char * name,
+			const char * signature, GMetaVisibility vis, const char * nameSpace,
+			int modifiers) {
+		GMetaNonReflectedItem * nrItem = new GMetaNonReflectedItem(
+				name, mcatEnum, vis, signature, nameSpace);
+		nrItem->addModifier(modifiers);
+
+		return GDefineMetaNonReflected<DerivedType>(
+				this->metaClass,
+				this->metaClass->addNonReflected(nrItem)
+		);
+	}
+
+
+	/**
+	 * Creates a non-reflected operator in the class.
+	 *
+	 * Not used. Use _methodNR instead
+	 *
+	 * @param name Name of the operator (i.e. operator+)
+	 * @param signature Signature of the operator (i.e. int operator+(int, int))
+	 * @param vis Visibility of the item (one of mPrivate = 1, mProtected = 2,
+	 *	 mPublic = 4)
+	 * @param nameSpace namespace this item is in
+	 */
+	GDefineMetaNonReflected<DerivedType> _operatorNR(const char * name,
+			const char * signature, GMetaVisibility vis, const char * nameSpace,
+			int modifiers) {
+		GMetaNonReflectedItem * nrItem = new GMetaNonReflectedItem(
+				name, mcatOperator, vis, signature, nameSpace);
+		nrItem->addModifier(modifiers);
+
+		return GDefineMetaNonReflected<DerivedType>(
+				this->metaClass,
+				this->metaClass->addNonReflected(nrItem)
+		);
+	}
+
+
+
+
+	//  mcatConstructor
+	//mcatClass
+
+	//mcatBaseClass
+
 
 protected:
 	meta_internal::GSharedMetaClass metaClass;
@@ -446,18 +636,22 @@ private:
 	typedef GDefineMetaCommon<ClassType, ThisType > super;
 
 public:
-	static ThisType define(const char * className) {
+	static ThisType define(const char * className, const char * nameSpace,
+			int modifiers, int baseModifiers[]) {
 		ThisType c;
-		c.init(className, NULL, true, GMetaPolicyDefault());
+		c.init(className, NULL, true, GMetaPolicyDefault(), nameSpace,
+				modifiers, baseModifiers);
 		return c;
 	}
 
-	static ThisType declare(const char * className) {
+	static ThisType declare(const char * className, const char * nameSpace,
+			int modifiers, int baseModifiers[]) {
 		ThisType c;
-		c.init(className, NULL, false, GMetaPolicyDefault());
+		c.init(className, NULL, false, GMetaPolicyDefault(), nameSpace,
+				modifiers, baseModifiers);
 		return c;
 	}
-	
+
 	static ThisType fromMetaClass(GMetaClass * metaClass) {
 		return ThisType(metaClass);
 	}
@@ -482,15 +676,17 @@ public:
 
 	template <typename P>
 	struct Policy {
-		static ThisType define(const char * className) {
+		static ThisType define(const char * className, const char * nameSpace,
+				int modifiers, int baseModifiers[]) {
 			ThisType c;
-			c.init(className, NULL, true, P());
+			c.init(className, NULL, true, P(), nameSpace, modifiers, baseModifiers);
 			return c;
 		}
 
-		static ThisType declare(const char * className) {
+		static ThisType declare(const char * className, const char * nameSpace,
+				int modifiers, int baseModifiers[]) {
 			ThisType c;
-			c.init(className, NULL, false, P());
+			c.init(className, NULL, false, P(), nameSpace, modifiers, baseModifiers);
 			return c;
 		}
 
@@ -512,7 +708,7 @@ public:
 			return c;
 		}
 	};
-	
+
 
 protected:
 	GDefineMetaClass() : super(meta_internal::GSharedMetaClass(), NULL) {
@@ -531,8 +727,8 @@ protected:
 
 public:
 	template <typename BaseType>
-	ThisType _base() {
-		this->metaClass->template addBaseClass<ClassType, BaseType>();
+	ThisType _base(int modifiers) {
+		this->metaClass->template addBaseClass<ClassType, BaseType>(modifiers);
 
 		return *this;
 	}
@@ -540,32 +736,32 @@ public:
 	template <typename FT>
 	GDefineMetaConstructor<ThisType> _constructor() {
 		return GDefineMetaConstructor<ThisType>(
-			this->metaClass,
-			this->metaClass->addConstructor(GMetaConstructor::newConstructor<ClassType, FT>(GMetaPolicyDefault()))
+				this->metaClass,
+				this->metaClass->addConstructor(GMetaConstructor::newConstructor<ClassType, FT>(GMetaPolicyDefault()))
 		);
 	}
 
 	template <typename FT, typename Policy>
 	GDefineMetaConstructor<ThisType> _constructor(const Policy & policy) {
 		return GDefineMetaConstructor<ThisType>(
-			this->metaClass,
-			this->metaClass->addConstructor(GMetaConstructor::newConstructor<ClassType, FT>(policy))
+				this->metaClass,
+				this->metaClass->addConstructor(GMetaConstructor::newConstructor<ClassType, FT>(policy))
 		);
 	}
 
 	template <typename FT>
 	GDefineMetaConstructor<ThisType> _constructor(const FT & func) {
 		return GDefineMetaConstructor<ThisType>(
-			this->metaClass,
-			this->metaClass->addConstructor(GMetaConstructor::newConstructor<ClassType, FT>(func, GMetaPolicyDefault()))
+				this->metaClass,
+				this->metaClass->addConstructor(GMetaConstructor::newConstructor<ClassType, FT>(func, GMetaPolicyDefault()))
 		);
 	}
 
 	template <typename FT, typename Policy>
 	GDefineMetaConstructor<ThisType> _constructor(const FT & func, const Policy & policy) {
 		return GDefineMetaConstructor<ThisType>(
-			this->metaClass,
-			this->metaClass->addConstructor(GMetaConstructor::newConstructor<ClassType, FT>(func, policy))
+				this->metaClass,
+				this->metaClass->addConstructor(GMetaConstructor::newConstructor<ClassType, FT>(func, policy))
 		);
 	}
 
@@ -574,34 +770,52 @@ public:
 
 	//scturner added type signature
 	template <typename FT>
-	GDefineMetaConstructor<ThisType> _constructorEx(const char * paramTypes) {
+	GDefineMetaConstructor<ThisType> _constructorEx(const char * paramTypes,
+			const char * nameSpace, int modifiers) {
+		GMetaConstructor * c = GMetaConstructor::newConstructor<ClassType, FT>(
+				GMetaPolicyDefault(), paramTypes, nameSpace);
+		c->addModifier(modifiers);
 		return GDefineMetaConstructor<ThisType>(
 				this->metaClass,
-				this->metaClass->addConstructor(GMetaConstructor::newConstructor<ClassType, FT>(GMetaPolicyDefault() G_ADD_TYPE_INFO_ACT_PARAM_LAST))
+				this->metaClass->addConstructor(c)
 		);
 	}
 	//scturner added type signature
 	template <typename FT, typename Policy>
-	GDefineMetaConstructor<ThisType> _constructorEx(const char * paramTypes, const Policy & policy) {
+	GDefineMetaConstructor<ThisType> _constructorEx(const char * paramTypes,
+			const char * nameSpace, int modifiers, const Policy & policy) {
+		GMetaConstructor * c = GMetaConstructor::newConstructor<ClassType, FT>(
+				policy, paramTypes, nameSpace);
+		c->addModifier(modifiers);
 		return GDefineMetaConstructor<ThisType>(
 				this->metaClass,
-				this->metaClass->addConstructor(GMetaConstructor::newConstructor<ClassType, FT>(policy G_ADD_TYPE_INFO_ACT_PARAM_LAST))
+				this->metaClass->addConstructor(c)
 		);
 	}
 	//scturner added type signature
 	template <typename FT>
-	GDefineMetaConstructor<ThisType> _constructorEx(const char * paramTypes, const FT & func) {
+	GDefineMetaConstructor<ThisType> _constructorEx(const char * paramTypes,
+			const char * nameSpace, int modifiers, const FT & func) {
+		GMetaConstructor * c = GMetaConstructor::newConstructor<ClassType, FT>(
+				func, GMetaPolicyDefault(),
+				paramTypes, nameSpace);
+		c->addModifier(modifiers);
 		return GDefineMetaConstructor<ThisType>(
 				this->metaClass,
-				this->metaClass->addConstructor(GMetaConstructor::newConstructor<ClassType, FT>(func, GMetaPolicyDefault() G_ADD_TYPE_INFO_ACT_PARAM_LAST))
+				this->metaClass->addConstructor(c)
 		);
 	}
 	//scturner added type signature
 	template <typename FT, typename Policy>
-	GDefineMetaConstructor<ThisType> _constructorEx(const char * paramTypes, const FT & func, const Policy & policy) {
+	GDefineMetaConstructor<ThisType> _constructorEx(const char * paramTypes,
+			const char * nameSpace, int modifiers, const FT & func,
+			const Policy & policy) {
+		GMetaConstructor * c = GMetaConstructor::newConstructor<ClassType, FT>(
+				func, policy, paramTypes, nameSpace);
+		c->addModifier(modifiers);
 		return GDefineMetaConstructor<ThisType>(
 				this->metaClass,
-				this->metaClass->addConstructor(GMetaConstructor::newConstructor<ClassType, FT>(func, policy G_ADD_TYPE_INFO_ACT_PARAM_LAST))
+				this->metaClass->addConstructor(c)
 		);
 	}
 
@@ -618,11 +832,87 @@ public:
 		return this->metaClass.take();
 	}
 
+
+	/**
+	 * Creates a non-reflected base class in the class.
+	 *
+	 *
+	 * @param name Name of the base class (i.e. string)
+	 * @param vis Visibility of the item (one of mPrivate = 1, mProtected = 2,
+	 *	 mPublic = 4)
+	 * @param nameSpace namespace this item is in
+	 */
+	GDefineMetaNonReflected<ThisType> _baseNR(const char * name,
+			GMetaVisibility vis, const char * nameSpace, int modifiers) {
+		GMetaNonReflectedItem * nrItem = new GMetaNonReflectedItem(
+				name, mcatBaseClass, vis, name, nameSpace);
+		nrItem->addModifier(modifiers);
+
+
+		return GDefineMetaNonReflected<ThisType>(
+				this->metaClass,
+				this->metaClass->addNonReflected(nrItem)
+		);
+	}
+
+
+	/**
+	 * Creates a non-reflected constructor in the class.
+	 *
+	 *
+	 * @param signature Signature of the constructor (i.e. (int, double))
+	 * @param vis Visibility of the item (one of mPrivate = 1, mProtected = 2,
+	 *	 mPublic = 4)
+	 * @param nameSpace namespace this item is in
+	 */
+	GDefineMetaNonReflected<ThisType> _constructorNR(
+			const char * signature, GMetaVisibility vis, const char * nameSpace,
+			int modifiers) {
+
+//		CPGF_TRACE("constructor NR \r\n" )
+		std::string sig = this->metaClass->getName() + signature;
+//		CPGF_TRACE("constructor NR " << sig << "\r\n")
+		GMetaNonReflectedItem * nrItem = new GMetaNonReflectedItem(
+				this->metaClass->getName().c_str(), mcatConstructor, vis,
+				sig.c_str(), nameSpace);
+		nrItem->addModifier(modifiers);
+//		CPGF_TRACE("constructor NR mods\r\n")
+		return GDefineMetaNonReflected<ThisType>(
+				this->metaClass,
+				this->metaClass->addNonReflected(nrItem)
+		);
+	}
+
+
+	/**
+	 * Creates a non-reflected inner class in the class.
+	 *
+	 * @param name Name of the inner class (i.e. iClass)
+	 * @param vis Visibility of the item (one of mPrivate = 1, mProtected = 2,
+	 *	 mPublic = 4)
+	 * @param nameSpace namespace this item is in
+	 */
+	GDefineMetaNonReflected<ThisType> _innerClassNR(const char * name,
+			GMetaVisibility vis, const char * nameSpace, int modifiers) {
+		GMetaNonReflectedItem * nrItem = new GMetaNonReflectedItem(
+				name, mcatClass, vis, name, nameSpace);
+		nrItem->addModifier(modifiers);
+
+		return GDefineMetaNonReflected<ThisType>(
+				this->metaClass,
+				this->metaClass->addNonReflected(nrItem)
+		);
+	}
+
+
+
 protected:
 	typedef typename cpgf::TypeList_Make<GPP_REPEAT_PARAMS(MAX_BASE_COUNT, BaseType)>::Result BaseListType;
 
 	template <typename P>
-	void init(const char * className, void (*reg)(GMetaClass *), bool addToGlobal, const P & policy) {
+	void init(const char * className, void (*reg)(GMetaClass *),
+			bool addToGlobal, const P & policy, const char * nameSpace,
+			int modifiers, int baseModifiers[]) {
 		GMetaClass * classToAdd = NULL;
 
 		if(addToGlobal) {
@@ -631,14 +921,18 @@ protected:
 
 		if(classToAdd == NULL) {
 			classToAdd = new GMetaClass(
-				(ClassType *)0, meta_internal::doMakeSuperList<BaseListType, ClassType>(),
-				className, reg, policy
+					//TODO add modifier here
+					(ClassType *)0, meta_internal::doMakeSuperList<BaseListType,
+						ClassType>(baseModifiers),
+					className, reg, policy, nameSpace
 			);
 
 			if(addToGlobal) {
 				getGlobalMetaClass()->addClass(classToAdd);
 			}
 		}
+
+		classToAdd->addModifier(modifiers);
 
 		this->metaClass.reset(classToAdd);
 		if(addToGlobal) {
@@ -667,36 +961,36 @@ public:
 		c.init();
 		return c;
 	}
-	
+
 	template <typename FT>
 	GDefineMetaConstructor<ThisType> _constructor() {
 		return GDefineMetaConstructor<ThisType>(
-			this->metaClass,
-			this->metaClass->addConstructor(GMetaConstructor::newConstructor<ClassType, FT>(GMetaPolicyDefault()))
+				this->metaClass,
+				this->metaClass->addConstructor(GMetaConstructor::newConstructor<ClassType, FT>(GMetaPolicyDefault()))
 		);
 	}
 
 	template <typename FT, typename Policy>
 	GDefineMetaConstructor<ThisType> _constructor(const Policy & policy) {
 		return GDefineMetaConstructor<ThisType>(
-			this->metaClass,
-			this->metaClass->addConstructor(GMetaConstructor::newConstructor<ClassType, FT>(policy))
+				this->metaClass,
+				this->metaClass->addConstructor(GMetaConstructor::newConstructor<ClassType, FT>(policy))
 		);
 	}
 
 	template <typename FT>
 	GDefineMetaConstructor<ThisType> _constructor(const FT & func) {
 		return GDefineMetaConstructor<ThisType>(
-			this->metaClass,
-			this->metaClass->addConstructor(GMetaConstructor::newConstructor<ClassType, FT>(func, GMetaPolicyDefault()))
+				this->metaClass,
+				this->metaClass->addConstructor(GMetaConstructor::newConstructor<ClassType, FT>(func, GMetaPolicyDefault()))
 		);
 	}
 
 	template <typename FT, typename Policy>
 	GDefineMetaConstructor<ThisType> _constructor(const FT & func, const Policy & policy) {
 		return GDefineMetaConstructor<ThisType>(
-			this->metaClass,
-			this->metaClass->addConstructor(GMetaConstructor::newConstructor<ClassType, FT>(func, policy))
+				this->metaClass,
+				this->metaClass->addConstructor(GMetaConstructor::newConstructor<ClassType, FT>(func, policy))
 		);
 	}
 
@@ -728,8 +1022,10 @@ protected:
 protected:
 	void init() {
 		this->dangling = true;
-		
-		GMetaClass * metaClass = new GMetaClass((ClassType *)0, new meta_internal::GMetaSuperList, "", NULL, GMetaPolicyDefault());
+
+		GMetaClass * metaClass = new GMetaClass((ClassType *)0,
+				new meta_internal::GMetaSuperList, "", NULL,
+				GMetaPolicyDefault(), "");
 
 		this->metaClass.reset(metaClass);
 		this->currentItem = metaClass;

@@ -19,7 +19,7 @@ private:
 	typedef GMetaTypedItem super;
 
 public:
-	GMetaEnum(const char * name, const GMetaType & itemType);
+	GMetaEnum(const char * name, const GMetaType & itemType, const char * nameSpace);
 	virtual ~GMetaEnum();
 
 	virtual size_t getTypeSize() const;

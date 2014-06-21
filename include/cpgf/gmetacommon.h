@@ -39,6 +39,12 @@ struct GMetaVariadicParam
 	size_t paramCount;
 };
 
+enum GMetaVisibility {
+	mPrivate = 1,
+	mProtected = 2,
+	mPublic = 4,
+};
+
 
 enum GMetaCategory {
 	mcatField = 0,
@@ -50,17 +56,31 @@ enum GMetaCategory {
 	mcatClass = 6,
 	mcatAnnotation = 7,
 	mcatFundamental = 8,
-
-	mcatCount = 9
+	mcatNonReflected = 9,
+	mcatBaseClass = 10, /* Note: this is for non-reflected items only */
+	mcatCount = 11
 };
 
+const int metaModifierNone = 0;
 const int metaModifierStatic = 1 << 0;
 const int metaModifierNoFree = 1 << 1;
+const int metaModifierVirtual = 1 << 2;
+const int metaModifierPureVirtual = 1 << 3;
+const int metaModifierTemplate = 1 << 4;
+const int metaModifierConst = 1 << 5;
+const int metaModifierVolatile = 1 << 6;
+const int metaModifierInline = 1 << 7;
+const int metaModifierExplicit = 1 << 8;
+const int metaModifierExtern = 1 << 9;
+const int metaModifierMutable = 1 << 10;
+
+
 
 class GMetaItem : public GNoncopyable
 {
 public:
-	GMetaItem(const char * name, const GMetaType & itemType, GMetaCategory category);
+	GMetaItem(const char * name, const GMetaType & itemType,
+			GMetaCategory category, const char * nameSpace);
 	virtual ~GMetaItem();
 
 	bool isStatic() const {
@@ -79,6 +99,10 @@ public:
 		return (this->modifiers & m) != 0;
 	}
 
+	int getModifiers() const {
+		return this->modifiers;
+	}
+
 	const GMetaItem * getOwnerItem() const {
 		return this->ownerItem;
 	}
@@ -88,6 +112,7 @@ public:
 
 	const std::string & getName() const;
 	const std::string & getQualifiedName() const;
+	const std::string & getNamespace() const;
 	std::string makeQualifiedName(const char * delimiter) const;
 	
 	bool equals(const GMetaItem * other) const;
@@ -124,7 +149,7 @@ private:
 	typedef GMetaItem super;
 
 public:
-	GMetaTypedItem(const char * name, const GMetaType & itemType, GMetaCategory category);
+	GMetaTypedItem(const char * name, const GMetaType & itemType, GMetaCategory category, const char * nameSpace);
 	virtual ~GMetaTypedItem();
 
 	const GMetaType & getMetaType() const;
@@ -146,7 +171,7 @@ private:
 	typedef GMetaItem super;
 
 public:
-	GMetaAccessible(const char * name, const GMetaType & itemType, GMetaCategory category);
+	GMetaAccessible(const char * name, const GMetaType & itemType, GMetaCategory category, const char * nameSpace);
 
 	virtual bool canGet() const = 0;
 	virtual bool canSet() const = 0;
@@ -167,7 +192,7 @@ private:
 	typedef GMetaItem super;
 
 public:
-	GMetaCallable(const char * name, const GMetaType & itemType, GMetaCategory category);
+	GMetaCallable(const char * name, const GMetaType & itemType, GMetaCategory category, const char * nameSpace);
 
 	virtual size_t getParamCount() const = 0;
 	virtual GMetaType getParamType(size_t index) const = 0;
@@ -218,7 +243,12 @@ bool metaIsConstructor(int category);
 bool metaIsClass(int category);;
 bool metaIsAnnotation(int category);
 bool metaIsFundamental(int category);
-
+/**
+ * Determines if this is the non-reflected category
+ * @param category Category to check
+ * @return true if the category is mcatNonReflected
+ */
+bool metaIsNonReflected(int category);
 
 
 } // namespace cpgf

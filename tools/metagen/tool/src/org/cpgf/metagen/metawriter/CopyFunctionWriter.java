@@ -127,8 +127,11 @@ public class CopyFunctionWriter
         codeWriter.write(WriterUtil.getReflectionAction(define, "_methodEx"));
         codeWriter.write("(" + Util.quoteText(methodName) + ", ");
         //scturner
-        codeWriter.write(getTypeList() + ",");
-
+        codeWriter.write(getTypeList() + ", ");
+        codeWriter.write(Util.quoteText(item.getFullNamespace()) + ", ");
+        codeWriter.write(EnumModifier.modifersToCpgfString(
+            EnumItemType.METHOD, item.getModifiers()) + ", ");
+        
         codeWriter.write("(" + item.getQualifiedName() + " * (*) (");
         this.writeSelf(codeWriter, false);
 //        codeWriter.write(", ");

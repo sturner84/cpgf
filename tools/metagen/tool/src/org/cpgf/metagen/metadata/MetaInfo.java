@@ -1,11 +1,8 @@
 package org.cpgf.metagen.metadata;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import org.cpgf.metagen.Config;
+import org.cpgf.metagen.*;
 import org.cpgf.metagen.doxyxmlparser.FileMap;
 import org.cpgf.metagen.metawriter.OperatorNameMap;
 import org.cpgf.metagen.metawriter.OutputCallbackClassMap;
@@ -19,6 +16,7 @@ public class MetaInfo {
     private List<TemplateInstance> templateInstanceList;
     private OutputCallbackClassMap callbackClassMap;
     private OperatorNameMap operatorNameMap;
+    private List<String> namespaces;
 
     public MetaInfo(Config config) {
     	this.config = config;
@@ -31,6 +29,8 @@ public class MetaInfo {
 		this.callbackClassMap = new OutputCallbackClassMap(this.config);
 		
 		this.operatorNameMap = new OperatorNameMap();
+		
+		namespaces = new ArrayList<String>();
     }
     
     public Config getConfig() {
@@ -48,7 +48,91 @@ public class MetaInfo {
 	public OperatorNameMap getOperatorNameMap() {
 		return this.operatorNameMap;
 	}
+	
+	// ----------------------------------------------------------
+	/**
+	 * Gets the list of all namespaces
+	 * @return List of all namespaces
+	 */
+	public List<String> getNamespaces() {
+	    return namespaces;
+	}
+	
+	// ----------------------------------------------------------
+	/**
+	 * Determines if this namespace exists
+	 * @param namespace Namespace to check
+	 * @return true if it exists
+	 */
+	public boolean doesNamespaceExist(String namespace) {
+	    for (String ns : namespaces) {
+	        if (ns.equals(namespace)) {
+	            return true;
+	        }
+	    }
+	    
+	    return false;
+	}
+	
+	// ----------------------------------------------------------
+	/**
+	 * Adds a namespace to the list of namespaces.
+	 * null is ignored.
+	 * @param namespace Namespace to add
+	 */
+	public void addNamespace(String namespace) {
+	    if (namespace != null && !doesNamespaceExist(namespace)) {
+	        namespaces.add(namespace);
+	    }
+	}
+	
+	// ----------------------------------------------------------
+    /**
+     * Adds a namespace (as a list of separate namespaces) to 
+     * the list of namespaces.
+     * null is ignored.
+     * @param namespace Namespace to add
+     */
+    public void addNamespace(List<String> namespace) {
+        if (namespace != null) {
 
+            String nsStr = Util.joinStringList("::", namespace);
+           
+            if (!doesNamespaceExist(nsStr)) {
+                namespaces.add(nsStr);
+            }
+
+        }
+    }
+	
+
+	private String getNamespaceFromClassName(String className) {
+	    if (className == null || className.equals("")) {
+	        return "";
+	    }
+
+	    String namespace = className;
+	    
+	    if (doesNamespaceExist(namespace)) {
+	        return namespace;
+	    }
+	    
+	    int pos = className.lastIndexOf("::");
+	    if (pos >= 0) {
+	        return getNamespaceFromClassName(className.substring(0, pos));
+	    }
+	    
+	    return "";
+	}
+	
+	/**
+	 * Does post processing on the data to be reflected. 
+	 * 
+	 * Fixes globals, base and inner classes, and the relationship between
+	 * classes.
+	 * 
+	 *  @param fileMap Files mapped to their classes
+	 */
     public void fixup(FileMap fileMap) {
     	this.doFixupGlobals();
     	this.doFixupBaseClasses();
@@ -76,6 +160,8 @@ public class MetaInfo {
     	this.doFixupTemplateInstances();
     	
     	this.callbackClassMap.build(this.getClassList(), fileMap);
+    	
+    	this.doFixupNamespaces();
     }
     
     private void doFixupTemplateInstances() {
@@ -220,5 +306,29 @@ public class MetaInfo {
 		}
 
 		return list;
+	}
+	
+	
+	private void doFixupItemNamespaces(List<Item> items, List<String> namespace) {
+	    for (Item i : items) {
+	        i.setNamespaces(namespace);
+	    }
+	}
+	
+	private void doFixupNamespaces() {
+	    String namespace;
+	    
+	    for (CppClass c : allClassList) {
+	        namespace = getNamespaceFromClassName(c.getLiteralName());
+	        String[] allNamespaces = namespace.split("::");
+	        
+	        List<String> nsStrs = Arrays.asList(allNamespaces);
+	        c.setNamespaces(nsStrs);
+	        
+	        LinkedList<Item> allItems = new LinkedList<Item>();
+	        c.getAllItems(allItems);
+	        
+	        doFixupItemNamespaces(allItems, nsStrs);
+	    }
 	}
 }

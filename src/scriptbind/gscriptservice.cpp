@@ -30,7 +30,10 @@ GScriptCoreService * doBindScriptCoreService(GScriptObject * scriptObject, const
 {
 	GScopedPointer<GScriptCoreService> coreService(new GScriptCoreService(scriptObject, bindName, libraryLoader));
 
-	GDefineMetaClass<GScriptCoreService> define = GDefineMetaClass<GScriptCoreService>::Policy<GMetaPolicyNoDefaultAndCopyConstructor>::declare("GScriptCoreService");
+	GDefineMetaClass<GScriptCoreService> define
+		= GDefineMetaClass<GScriptCoreService>
+			::Policy<GMetaPolicyNoDefaultAndCopyConstructor>
+			::declare("GScriptCoreService", "", 0, { 0 });
 	buildMetaClass_GScriptCoreService(define);
 
 	injectObjectToScript(scriptObject, define.getMetaClass(), coreService.get(), bindName);

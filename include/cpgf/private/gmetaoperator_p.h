@@ -251,13 +251,13 @@ DEF_UNARY(mopMember, p.operator->())
 #undef DEF_UNARY
 
 
-#ifdef G_ADD_TYPE_INFO
+//#ifdef G_ADD_TYPE_INFO
 //scturner method type fix
 #define REF_OP_GETPARAM_TYPE_NAME_HELPER(N) \
 		(N < typeNames[virtualGetParamType].size()) ? typeNames[virtualGetParamType][N].c_str() : ""
-#else
-#define REF_OP_GETPARAM_TYPE_NAME_HELPER(N)
-#endif
+//#else
+//#define REF_OP_GETPARAM_TYPE_NAME_HELPER(N)
+//#endif
 
 
 
@@ -339,14 +339,14 @@ protected:
 	GMetaOperatorDataVirtual * virtualFunctions;
 
 	//scturner
-#ifdef G_ADD_TYPE_INFO
-	//TODO fix method types
+//#ifdef G_ADD_TYPE_INFO
+	// fix method types
 	static std::map<GMetaType (*)(), std::string> returnTypes;
 	static std::map<GMetaType (*)(size_t), std::vector<std::string> > typeNames;
-#endif
+//#endif
 
 	//TODO move out of inline?
-	#ifdef G_ADD_TYPE_INFO
+//	#ifdef G_ADD_TYPE_INFO
 	protected:
 
 		//TODO method types fix
@@ -389,7 +389,7 @@ protected:
 				typeNames.insert(std::pair<GMetaType (*)(size_t), std::vector<std::string> >(paramFunc, types));
 			}
 		}
-	#endif
+//	#endif
 
 
 private:
@@ -463,12 +463,12 @@ private:
 	}
 
 	static GMetaType virtualGetResultType() {
-#ifdef G_ADD_TYPE_INFO
+//#ifdef G_ADD_TYPE_INFO
 		//scturner method type fix
 		return createMetaType<typename FT::ResultType>(returnTypes[virtualGetResultType].c_str());
-#else
-		return createMetaType<typename FT::ResultType>();
-#endif
+//#else
+//		return createMetaType<typename FT::ResultType>();
+//#endif
 	}
 
 	static GMetaExtendType virtualGetResultExtendType(uint32_t flags) {
@@ -546,7 +546,7 @@ private:
 
 public:
 	//scturner
-		GMetaOperatorData(G_ADD_TYPE_INFO_PARAM_ONLY) {
+		GMetaOperatorData(const char * paramTypes = NULL) {
 		static GMetaOperatorDataVirtual thisFunctions = {
 			&virtualBaseMetaDeleter<ThisType>,
 			
@@ -574,9 +574,9 @@ public:
 
 		this->virtualFunctions = &thisFunctions;
 		//scturner
-#ifdef G_ADD_TYPE_INFO
+//#ifdef G_ADD_TYPE_INFO
 		parseParamTypes(paramTypes, virtualGetResultType, virtualGetParamType); //TODO method fix
-#endif
+//#endif
 	}
 };
 
@@ -632,12 +632,12 @@ private:
 	}
 
 	static GMetaType virtualGetResultType() {
-#ifdef G_ADD_TYPE_INFO
+//#ifdef G_ADD_TYPE_INFO
 		//scturner method type fix
 		return createMetaType<typename FT::ResultType>(returnTypes[virtualGetResultType].c_str());
-#else
-		return createMetaType<typename FT::ResultType>();
-#endif
+//#else
+//		return createMetaType<typename FT::ResultType>();
+//#endif
 	}
 
 	static GMetaExtendType virtualGetResultExtendType(uint32_t flags) {
@@ -708,7 +708,7 @@ private:
 
 public:
 	//scturner
-	GMetaOperatorData(G_ADD_TYPE_INFO_PARAM_ONLY) {
+	GMetaOperatorData(const char * paramTypes = NULL) {
 		static GMetaOperatorDataVirtual thisFunctions = {
 			&virtualBaseMetaDeleter<ThisType>,
 			
@@ -736,9 +736,9 @@ public:
 
 		this->virtualFunctions = &thisFunctions;
 		//scturner
-#ifdef G_ADD_TYPE_INFO
+//#ifdef G_ADD_TYPE_INFO
 		parseParamTypes(paramTypes, virtualGetResultType, virtualGetParamType); //TODO method fix
-#endif
+//#endif
 	}
 };
 
@@ -796,11 +796,11 @@ private:
 
 	static GMetaType virtualGetResultType() {
 		//scturner
-#ifdef G_ADD_TYPE_INFO
+//#ifdef G_ADD_TYPE_INFO
 		return createMetaType<typename FT::ResultType>(returnTypes[virtualGetResultType].c_str());
-#else
-		return createMetaType<typename FT::ResultType>();
-#endif
+//#else
+//		return createMetaType<typename FT::ResultType>();
+//#endif
 	}
 
 	static GMetaExtendType virtualGetResultExtendType(uint32_t flags) {
@@ -915,7 +915,7 @@ private:
 
 public:
 	//scturner
-	GMetaOperatorData(G_ADD_TYPE_INFO_PARAM_ONLY) {
+	GMetaOperatorData(const char * paramTypes = NULL) {
 		static GMetaOperatorDataVirtual thisFunctions = {
 			&virtualBaseMetaDeleter<ThisType>,
 			
@@ -943,9 +943,9 @@ public:
 
 		this->virtualFunctions = &thisFunctions;
 		//scturner
-#ifdef G_ADD_TYPE_INFO
+//#ifdef G_ADD_TYPE_INFO
 		parseParamTypes(paramTypes, virtualGetResultType, virtualGetParamType); //TODO method fix
-#endif
+//#endif
 	}
 
 };

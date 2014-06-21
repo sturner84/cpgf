@@ -1,9 +1,6 @@
 package org.cpgf.metagen.metadata;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.cpgf.metagen.Util;
 
@@ -484,4 +481,20 @@ public class CppClass extends ParameteredItem {
 		}
 	}
 	
+	
+	// ----------------------------------------------------------
+    /**
+     * Gets a list of modifiers set for this Item
+     * @return List of EnumModifiers will all of the modifiers for this Item
+     */
+    @Override
+    public List<EnumModifier> getModifiers() {
+        List<EnumModifier> list =  new LinkedList<EnumModifier>();
+        
+        if (isTemplate()) {
+            list.add(EnumModifier.Template);
+        }
+        
+        return list;
+    }
 }

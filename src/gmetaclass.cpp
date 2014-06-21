@@ -144,6 +144,15 @@ const GMetaClass * GMetaSuperList::getSuper(size_t index) const
 	}
 }
 
+int GMetaSuperList::getSuperModifiers(size_t index) const {
+	if(index >= this->getCount()) {
+		return 0;
+	}
+	else {
+		return this->implement->superList[index].getModifiers();
+	}
+}
+
 const GMetaClassCasterBase * GMetaSuperList::getCaster(size_t index) const
 {
 	if(index >= this->getCount()) {
@@ -270,11 +279,13 @@ void GMetaInternalItemList::addItem(GMetaItem * item)
 		|| metaIsConstructor(item->getCategory())
 		|| metaIsMethod(item->getCategory())
 		|| metaIsOperator(item->getCategory())
+		|| metaIsNonReflected(item->getCategory())
 		|| this->getItemByName(item->getName().c_str()) == NULL
 	);
 
 	this->implement->itemList.push_back(item);
 	this->implement->itemMap.insert(std::make_pair(item->getName().c_str(), item));
+
 }
 
 size_t GMetaInternalItemList::getCount() const
@@ -341,6 +352,8 @@ public:
 	GMetaInternalList<GMetaOperator> operatorList;
 	GMetaInternalList<GMetaEnum> enumList;
 	GMetaInternalList<GMetaClass> classList;
+	GMetaInternalList<GMetaClass> nonReflected;
+	GMetaInternalList<GMetaClass> baseClass;
 
 	GMetaInternalItemList metaList;
 
@@ -624,7 +637,9 @@ void GMetaClass::extractTo(GMetaClass * master)
 	for(int i = 0; i < static_cast<int>(mcatCount); ++i) {
 		GMetaCategory c = static_cast<GMetaCategory>(i);
 		if(this->implement->itemLists[c] != NULL) {
+//			CPGF_TRACE("extractTo before " << i << "\r\n")
 			this->implement->itemLists[c]->extractTo(master->implement->itemLists[c]);
+//			CPGF_TRACE("extractTo before " << i << "\r\n")
 		}
 	}
 	for(size_t i = 0; i < this->implement->metaList.getCount(); ++i) {
@@ -660,6 +675,48 @@ const GMetaClass * GMetaClass::getClassAt(size_t index) const
 {
 	return static_cast<const GMetaClass *>(this->getItemAt(mcatClass, index));
 }
+
+
+
+GMetaNonReflectedItem * GMetaClass::addNonReflected(
+		GMetaNonReflectedItem * nr) {
+//	CPGF_TRACE("adding NR  " << nr->getName() << " " << nr->getItemCategory() << "\r\n")
+	this->addItem(mcatNonReflected, nr);
+//	CPGF_TRACE("added NR  " << nr->getName() << "\r\n")
+	return nr;
+}
+
+const GMetaNonReflectedItem * GMetaClass::getNonReflectedInHierarchy(
+		const char * name, void ** outInstance) const
+{
+//	CPGF_TRACE("non-reflected hierarchy\r\n")
+	return static_cast<const GMetaNonReflectedItem *>(this->getItemByName(
+			mcatNonReflected, name, true, outInstance));
+}
+
+const GMetaNonReflectedItem * GMetaClass::getNonReflected(const char * name)
+	const
+{
+//	CPGF_TRACE("non-reflected get\r\n")
+	return static_cast<const GMetaNonReflectedItem *>(this->getItemByName(
+			mcatNonReflected, name, false, NULL));
+}
+
+size_t GMetaClass::getNonReflectedCount() const
+{
+//	CPGF_TRACE("non-reflected count\r\n")
+	return this->getItemCount(mcatNonReflected);
+}
+
+const GMetaNonReflectedItem * GMetaClass::getNonReflectedAt(size_t index) const
+{
+//	CPGF_TRACE("non-reflected get at\r\n")
+	return static_cast<const GMetaNonReflectedItem *>(this->getItemAt(
+			mcatNonReflected, index));
+}
+
+
+
 
 
 size_t GMetaClass::getMetaCount() const
@@ -743,6 +800,12 @@ const GMetaClass * GMetaClass::getBaseClass(size_t baseIndex) const
 	this->ensureRegistered();
 
 	return const_cast<GMetaClass *>(this->superList->getSuper(baseIndex));
+}
+
+int GMetaClass::getBaseClassModifiers(size_t baseIndex) const {
+	this->ensureRegistered();
+
+	return this->superList->getSuperModifiers(baseIndex);
 }
 
 size_t GMetaClass::getBaseCount() const
@@ -902,14 +965,19 @@ void GMetaClass::setupItemLists()
 	this->implement->itemLists[mcatOperator] = &this->implement->operatorList;
 	this->implement->itemLists[mcatEnum] = &this->implement->enumList;
 	this->implement->itemLists[mcatClass] = &this->implement->classList;
+	this->implement->itemLists[mcatNonReflected] = &this->implement->nonReflected;
+	//this->implement->itemLists[mcatBaseClass] = &this->implement->baseClass;
+	this->implement->itemLists[mcatBaseClass] = NULL;
+
 }
 
 void GMetaClass::addItem(GMetaCategory listIndex, GMetaItem * item)
 {
+//	CPGF_TRACE("Adding list " << item->getName() << " " << listIndex << "\r\n")
 	this->implement->itemLists[listIndex]->addItem(item);
-
+//	CPGF_TRACE("Adding metalist " << item->getName() << " " << listIndex << "\r\n")
 	this->implement->metaList.addItem(item);
-
+//	CPGF_TRACE("Done adding " << item->getName() << " " << listIndex << "\r\n")
 	item->ownerItem = this;
 }
 
@@ -993,7 +1061,7 @@ GMetaClass * getGlobalMetaClass()
 {
 	static GMetaClass * global = NULL;
 	if(global == NULL && isLibraryLive()) {
-		global = new GMetaClass((void *)0, NULL, "", NULL, GMetaPolicyDefault());
+		global = new GMetaClass((void *)0, NULL, "", NULL, GMetaPolicyDefault(), "");
 		addOrderedStaticUninitializer(suo_GlobalMetaClass, makeUninitializerDeleter(&global));
 	}
 

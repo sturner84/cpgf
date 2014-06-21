@@ -75,7 +75,8 @@
 	CB_DEF_MEMBER_N(N) \
 	CB_DEF_GLOBAL_N(N) \
 	template<typename RT GPP_COMMA_IF(N) GPP_REPEAT(N, GPP_COMMA_PARAM, typename PT) > \
-	class GCallbackAgent_ ## N : public GCallbackBase<RT (*)(void * self GPP_COMMA_IF(N) GPP_REPEAT(N, CB_PARAM_TYPEVALUE, PT))> { \
+	class GCallbackAgent_ ## N : \
+	 	 public GCallbackBase<RT (*) (void * self GPP_COMMA_IF(N) GPP_REPEAT(N, CB_PARAM_TYPEVALUE, PT))> { \
 	protected: \
 		typedef GCallbackAgent_ ## N < RT GPP_REPEAT_TAIL_PARAMS(N, PT) > ThisType; \
 		typedef GCallbackBase<RT (*)(void * self GPP_COMMA_IF(N) GPP_REPEAT(N, CB_PARAM_TYPEVALUE, PT))> super; \
@@ -85,8 +86,25 @@
 		typedef FunctionType * FunctionPointer; \
 		CB_DEF_MEMBER(N) \
 		CB_DEF_GLOBAL(N) \
-		template <typename RR> int doInvoke(GPP_REPEAT(N, CB_PARAM_TYPEVALUE, PT) GPP_COMMA_IF(N) typename GEnableIfResult<IsSameType<RR, void> >::Result * = 0) const { if(this->getBase()) { ((FunctionPointer)(this->getBase()->getInvoke()))(this->getBase() GPP_COMMA_IF(N) GPP_REPEAT(N, CB_PARAM_PASSVALUE, PT)); } else { invokeEmptyCallback<int>(); } return 0; } \
-		template <typename RR> RT doInvoke(GPP_REPEAT(N, CB_PARAM_TYPEVALUE, PT) GPP_COMMA_IF(N) typename GDisableIfResult<IsSameType<RR, void> >::Result * = 0) const { if(this->getBase()) { return ((FunctionPointer)(this->getBase()->getInvoke()))(this->getBase() GPP_COMMA_IF(N) GPP_REPEAT(N, CB_PARAM_PASSVALUE, PT)); } else { return invokeEmptyCallback<RT>(); } } \
+		template <typename RR> int doInvoke(GPP_REPEAT(N, CB_PARAM_TYPEVALUE, PT) GPP_COMMA_IF(N) \
+				typename GEnableIfResult<IsSameType<RR, void> >::Result * = 0) const { \
+					if(this->getBase()) { \
+						((FunctionPointer)(this->getBase()->getInvoke()))(this->getBase() \
+								GPP_COMMA_IF(N) GPP_REPEAT(N, CB_PARAM_PASSVALUE, PT)); \
+					} else { \
+						invokeEmptyCallback<int>(); \
+					} \
+					return 0; \
+				} \
+		template <typename RR> RT doInvoke(GPP_REPEAT(N, CB_PARAM_TYPEVALUE, PT) GPP_COMMA_IF(N) \
+				typename GDisableIfResult<IsSameType<RR, void> >::Result * = 0) const { \
+					if(this->getBase()) { \
+						return ((FunctionPointer)(this->getBase()->getInvoke()))(this->getBase() \
+								GPP_COMMA_IF(N) GPP_REPEAT(N, CB_PARAM_PASSVALUE, PT)); \
+					} else { \
+						return invokeEmptyCallback<RT>(); \
+					} \
+				} \
 		template<typename OT, typename FT>	void init(OT * instance, const FT & func) { \
 			this->setBase(this->allocator.template newObject<typename GCallbackMember<OT, FT>::Type >(instance, func)); \
 		} \
@@ -187,6 +205,7 @@ struct SizeOfCallbackBase {
 
 struct SizeOfCallbackSon : public SizeOfCallbackBase {
 	virtual void a(int) { (void)a(0); }
+	virtual ~SizeOfCallbackSon() {}
 };
 
 class CBAllocator

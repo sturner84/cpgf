@@ -408,8 +408,10 @@ public:
 class GMetaSuperListItem
 {
 public:
-	GMetaSuperListItem(GMetaClass * superClass, const GMetaType & type, GMetaClassCasterBase * caster)
-		: superClass(superClass), type(type), caster(caster), addedDerived(false) {
+	GMetaSuperListItem(GMetaClass * superClass, const GMetaType & type,
+			GMetaClassCasterBase * caster, int modifiers)
+		: superClass(superClass), type(type), caster(caster),
+		  addedDerived(false), mods(modifiers) {
 	}
 
 	void freeList() {
@@ -436,11 +438,16 @@ public:
 		this->addedDerived = addedDerived;
 	}
 
+	int getModifiers() {
+		return mods;
+	}
+
 private:
 	mutable const GMetaClass * superClass;
 	GMetaType type;
 	GMetaClassCasterBase * caster;
 	bool addedDerived;
+	int mods;
 };
 
 class GMetaSuperListImplement;
@@ -453,17 +460,19 @@ public:
 
 	size_t getCount() const;
 	const GMetaClass * getSuper(size_t index) const;
+	int getSuperModifiers(size_t index) const;
 	const GMetaClassCasterBase * getCaster(size_t index) const;
 	bool hasAddedDerived(size_t index) const;
 	void setAddedDerived(size_t index, bool addedDerived);
 
 	template <typename ClassType, typename BaseType>
-	GMetaSuperListItem * add() {
+	GMetaSuperListItem * add(int modifiers) {
 		if(this->isMetaRoot<BaseType>()) {
 			return NULL;
 		}
 
-		return this->doAdd(GMetaSuperListItem(NULL, createMetaType<BaseType>(), new GMetaClassCaster<ClassType, BaseType>()));
+		return this->doAdd(GMetaSuperListItem(NULL, createMetaType<BaseType>(),
+				new GMetaClassCaster<ClassType, BaseType>(), modifiers));
 	}
 
 private:

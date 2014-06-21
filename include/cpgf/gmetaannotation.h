@@ -85,7 +85,7 @@ private:
 	typedef GMetaItem super;
 
 public:
-	GMetaAnnotation(const char * name);
+	GMetaAnnotation(const char * name, const char * nameSpace);
 	virtual ~GMetaAnnotation();
 
 	template <typename T>

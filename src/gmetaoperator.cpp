@@ -13,11 +13,11 @@ namespace cpgf {
 
 namespace meta_internal {
 
-#ifdef G_ADD_TYPE_INFO
+//#ifdef G_ADD_TYPE_INFO
 //scturner method types fix
 std::map<GMetaType (*)(), std::string> GMetaOperatorDataBase::returnTypes;
 std::map<GMetaType (*)(size_t), std::vector<std::string> > GMetaOperatorDataBase::typeNames;
-#endif
+//#endif
 
 void GMetaOperatorDataBase::deleteSelf()
 {
@@ -161,8 +161,10 @@ std::string operatorToName(GMetaOpType op) {
 } // namespace meta_internal
 
 
-GMetaOperator::GMetaOperator(meta_internal::GMetaOperatorDataBase * baseData)
-	: super(meta_internal::operatorToName(baseData->getOperator()).c_str(), baseData->createOperatorMetaType(), mcatOperator), baseData(baseData)
+GMetaOperator::GMetaOperator(meta_internal::GMetaOperatorDataBase * baseData, const char * nameSpace)
+	: super(meta_internal::operatorToName(baseData->getOperator()).c_str(),
+			baseData->createOperatorMetaType(), mcatOperator, nameSpace),
+			baseData(baseData)
 {
 }
 

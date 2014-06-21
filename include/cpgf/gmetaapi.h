@@ -63,6 +63,8 @@ struct IMetaAccessible : public IMetaItem
 	virtual void G_API_CC set(void * instance, const GVariantData * value) = 0;
 	virtual void * G_API_CC getAddress(const void * instance) = 0;
 	virtual uint32_t G_API_CC getSize() = 0;
+
+	virtual ~IMetaAccessible() {}
 };
 
 struct IMetaField : public IMetaAccessible

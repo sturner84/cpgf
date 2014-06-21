@@ -1,5 +1,7 @@
 package org.cpgf.metagen.metadata;
 
+import java.util.*;
+
 public class Constant extends Item {
 	private String value;
 
@@ -12,5 +14,6 @@ public class Constant extends Item {
 	public String getValue() {
 		return value;
 	}
+	
 
 }

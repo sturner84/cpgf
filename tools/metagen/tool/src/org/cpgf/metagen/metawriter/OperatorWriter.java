@@ -5,9 +5,7 @@ import java.util.List;
 
 import org.cpgf.metagen.Util;
 import org.cpgf.metagen.codewriter.CppWriter;
-import org.cpgf.metagen.metadata.MetaInfo;
-import org.cpgf.metagen.metadata.Operator;
-import org.cpgf.metagen.metadata.Parameter;
+import org.cpgf.metagen.metadata.*;
 
 // -------------------------------------------------------------------------
 /**
@@ -202,7 +200,6 @@ public class OperatorWriter {
 	
 	// ----------------------------------------------------------
 	/**
-	 * TODO
 	 * Creates the function that performs the [ ] operator function (setting).
 	 *  
 	 *  
@@ -292,12 +289,13 @@ public class OperatorWriter {
 		if(this.item.getOwner().isTemplate()) {
 			typename = "typename ";
 		}
-		return "const " + typename + "cpgf::RemoveReference<" + this.item.getResultType().getLiteralType() + " >::Result &";
+		return "const " + typename + "cpgf::RemoveReference<" 
+		    + this.item.getResultType().getLiteralType() + " >::Result &";
 	}
 
 	// ----------------------------------------------------------
 	/**
-	 * TODO
+	 * 
 	 * 
 	 * Reflects the function created by writeNameWrapperFunctionCode.
 	 * 
@@ -364,8 +362,12 @@ public class OperatorWriter {
 		codeWriter.write(action);
 		codeWriter.write("(" + Util.quoteText(methodName) + ", ");
 		//scturner
-		codeWriter.write(getTypeList() + ",");
-
+		codeWriter.write(getTypeList() + ", ");
+		codeWriter.write(Util.quoteText(item.getFullNamespace()) + ", ");
+		codeWriter.write(EnumModifier.modifersToCpgfString(
+            EnumItemType.METHOD, item.getModifiers()) + ", ");
+		
+        
 		codeWriter.write("(" + this.item.getResultType().getLiteralType()
 		    + " (*) (");
 		this.writeSelf(codeWriter, false);

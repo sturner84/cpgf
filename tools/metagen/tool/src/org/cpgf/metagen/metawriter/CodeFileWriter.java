@@ -31,11 +31,14 @@ public class CodeFileWriter {
 		this.doGetCreationFunctionNames(creationFunctionNames);
 	}
 	
-	protected void doGetCreationFunctionNames(List<String> creationFunctionNames) {
+	protected void doGetCreationFunctionNames(
+	    List<String> creationFunctionNames) {
+	    //do nothing
 	}
 	
 	public void write() {
-		String fullFileName = Util.concatFileName(this.getOutputDirectory(), this.getOutputFileName());
+		String fullFileName = Util.concatFileName(this.getOutputDirectory(), 
+		    this.getOutputFileName());
 		
 		if(this.shouldSkip()) {
 			Util.deleteFile(fullFileName);
@@ -65,6 +68,7 @@ public class CodeFileWriter {
 	}
 	
 	protected void doWrite(CppWriter codeWriter) throws Exception {
+	    //do nothing
 	}
 
 	protected FileInfo getFileInfo() {

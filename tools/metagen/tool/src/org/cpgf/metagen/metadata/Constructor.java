@@ -1,5 +1,7 @@
 package org.cpgf.metagen.metadata;
 
+import java.util.*;
+
 public class Constructor extends CppInvokable {
 	private boolean isExplicit;
 
@@ -37,4 +39,28 @@ public class Constructor extends CppInvokable {
 
 		return false;
 	}
+	
+	// ----------------------------------------------------------
+    /**
+     * Gets a list of modifiers set for this Item
+     * @return List of EnumModifiers will all of the modifiers for this Item
+     */
+    @Override
+    public List<EnumModifier> getModifiers() {
+        List<EnumModifier> list =  new LinkedList<EnumModifier>();
+        
+        if (isExplicit()) {
+            list.add(EnumModifier.Explicit);
+        }
+        
+        if (isTemplate()) {
+            list.add(EnumModifier.Template);
+        }
+        
+        if (isInline()) {
+            list.add(EnumModifier.Inline);
+        }
+        
+        return list;
+    }
 }

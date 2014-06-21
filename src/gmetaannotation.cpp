@@ -144,8 +144,8 @@ const GAnnotationValue * GAnnotationItem::getValue() const
 
 
 
-GMetaAnnotation::GMetaAnnotation(const char * name)
-	: super(name, GMetaType(), mcatAnnotation), implement(new meta_internal::GMetaAnnotationImplement), metaItem(NULL) {
+GMetaAnnotation::GMetaAnnotation(const char * name, const char * nameSpace)
+	: super(name, GMetaType(), mcatAnnotation, nameSpace), implement(new meta_internal::GMetaAnnotationImplement), metaItem(NULL) {
 }
 
 GMetaAnnotation::~GMetaAnnotation() {

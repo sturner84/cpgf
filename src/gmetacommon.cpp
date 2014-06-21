@@ -81,8 +81,8 @@ public:
 	typedef std::vector<const GMetaAnnotation *> AnnotationListType;
 	
 public:
-	GMetaItemImplement(const std::string & name, const GMetaType & itemType)
-		: name(name), itemType(itemType), annotationList() {
+	GMetaItemImplement(const std::string & name, const GMetaType & itemType, const std::string & nNameSpace)
+		: name(name), itemType(itemType), nameSpace(nNameSpace), annotationList() {
 	}
 
 	~GMetaItemImplement() {
@@ -96,6 +96,7 @@ public:
 	std::string name;
 	std::string qualifiedName;
 	GMetaType itemType;
+	std::string nameSpace;
 	GScopedPointer<AnnotationListType> annotationList;
 };
 
@@ -180,8 +181,8 @@ void adjustParamIndex(size_t & index, bool isExplicitThis)
 } // namespace meta_internal
 
 
-GMetaItem::GMetaItem(const char * name, const GMetaType & itemType, GMetaCategory category)
-	: implement(new meta_internal::GMetaItemImplement(name, itemType)), modifiers(0), category(category), ownerItem(NULL)
+GMetaItem::GMetaItem(const char * name, const GMetaType & itemType, GMetaCategory category, const char * nameSpace)
+	: implement(new meta_internal::GMetaItemImplement(name, itemType, nameSpace)), modifiers(0), category(category), ownerItem(NULL)
 {
 }
 
@@ -256,6 +257,11 @@ const std::string & GMetaItem::getQualifiedName() const
 	return this->implement->qualifiedName;
 }
 
+const std::string & GMetaItem::getNamespace() const
+{
+	return this->implement->nameSpace;
+}
+
 std::string GMetaItem::makeQualifiedName(const char * delimiter) const
 {
 	std::string result;
@@ -277,8 +283,8 @@ void GMetaItem::setName(const char * name)
 
 	
 
-GMetaTypedItem::GMetaTypedItem(const char * name, const GMetaType & itemType, GMetaCategory category)
-	: super(name, itemType, category)
+GMetaTypedItem::GMetaTypedItem(const char * name, const GMetaType & itemType, GMetaCategory category, const char * nameSpace)
+	: super(name, itemType, category, nameSpace)
 {
 }
 
@@ -296,14 +302,14 @@ const GMetaType & GMetaTypedItem::getMetaType() const
 }
 
 
-GMetaAccessible::GMetaAccessible(const char * name, const GMetaType & itemType, GMetaCategory category)
-	: super(name, itemType, category)
+GMetaAccessible::GMetaAccessible(const char * name, const GMetaType & itemType, GMetaCategory category, const char * nameSpace)
+	: super(name, itemType, category, nameSpace)
 {
 }
 
 
-GMetaCallable::GMetaCallable(const char * name, const GMetaType & itemType, GMetaCategory category)
-	: super(name, itemType, category)
+GMetaCallable::GMetaCallable(const char * name, const GMetaType & itemType, GMetaCategory category, const char * nameSpace)
+	: super(name, itemType, category, nameSpace)
 {
 }
 
@@ -403,6 +409,15 @@ bool metaIsFundamental(int category)
 	return category == mcatFundamental;
 }
 
+/**
+ * Determines if this is the non-reflected category
+ * @param category Category to check
+ * @return true if the category is mcatNonReflected
+ */
+bool metaIsNonReflected(int category)
+{
+	return category == mcatNonReflected;
+}
 
 
 } // namespace cpgf
