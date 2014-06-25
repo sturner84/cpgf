@@ -10,6 +10,21 @@ will not be callable, but the user could determines what is being defined in the
 class.
 
 
+version 0.95
+Updates to cpgf
+	Support for more modifiers associated with all items
+	Support for adding and enumerating non-reflected items
+	Inclusion of namespace information with each item 
+Updates to metagen
+	Better handling of modifiers (including more modifiers)
+	Namespaces and modifiers are now included in the reflected data
+Known bugs:
+	Doxygen does not seem to be picking up anonymous namespaces even with the
+		correct Doxygen option on
+	Using the same name in different namespaces causes compilation problems 
+		when they are reflected. Need to adjust reflected code to explicitly 
+		use namespaces instead of using a blanket: using namespace ...;
+
 version 0.80 (Modified to match LookingGlass's version)
 Updates to metagen
 	Modified how operators are reflected so that they are treated only as 
