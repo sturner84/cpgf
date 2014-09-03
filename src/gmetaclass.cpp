@@ -26,6 +26,8 @@
 namespace cpgf {
 
 
+std::string mainName = "";
+
 GMetaModule * doGetGlobalModule();
 
 namespace meta_internal {
@@ -1066,6 +1068,28 @@ GMetaClass * getGlobalMetaClass()
 	}
 
 	return global;
+}
+
+
+/**
+ * Sets the name of the reflected main method. This is an option used with
+ * metagen.
+ *
+ * @param n Name of the main method after it has been reflected.
+ */
+void setReflectMainName(std::string n)
+{
+	mainName = n;
+}
+
+/**
+ * Gets the name of the rflected main method.
+ *
+ * @return Name of the main method after it has been reflected.
+ */
+std::string getReflectMainName()
+{
+	return mainName;
 }
 
 

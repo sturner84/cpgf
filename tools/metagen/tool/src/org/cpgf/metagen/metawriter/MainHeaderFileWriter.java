@@ -63,6 +63,11 @@ public class MainHeaderFileWriter extends CodeFileWriter {
 			codeWriter.writeLine("_d._class(" + funcName + "());");
 		}
 
+		codeWriter.writeLine("");
+		codeWriter.writeLine("setReflectMainName(\"" 
+		                + this.getConfig().reflectMainName 
+		                + "\");"); 
+		
 		codeWriter.endBlock();
 
 		codeWriter.writeLine("");
@@ -72,6 +77,12 @@ public class MainHeaderFileWriter extends CodeFileWriter {
 		//create a function to easily register the metadata
 		codeWriter.writeLine("void registerMetaDataToGlobal();");		
 		codeWriter.writeLine("");
+//		//method for getting the main method's name
+//		codeWriter.writeLine("char * getReflectMainName()");   
+//		codeWriter.beginBlock();
+//		
+//		codeWriter.endBlock();
+//        codeWriter.writeLine("");
 		//end scturner
 
 		codeWriter.endNamespace(this.getConfig().cppNamespace);

@@ -11,7 +11,7 @@
 #include "cpgf/gmetanonreflected.h"
 
 #include <vector>
-
+#include <string>
 
 #if defined(_MSC_VER)
 #pragma warning(push)
@@ -241,6 +241,21 @@ const GMetaClass * findMetaClass(const GMetaType & type);
 const GMetaClass * findMetaClass(const char * name);
 
 GMetaClass * getGlobalMetaClass();
+
+/**
+ * Sets the name of the reflected main method. This is an option used with
+ * metagen.
+ *
+ * @param n Name of the main method after it has been reflected.
+ */
+void setReflectMainName(std::string n);
+
+/**
+ * Gets the name of the rflected main method.
+ *
+ * @return Name of the main method after it has been reflected.
+ */
+std::string getReflectMainName();
 
 
 } // namespace cpgf
